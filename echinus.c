@@ -193,6 +193,8 @@ struct {
 	Bool dectiled;
 	Bool hidebastards;
 	int focus;
+	int gap;
+	int margin;
 	int snap;
 	char command[255];
 } options;
@@ -1948,6 +1950,8 @@ setup(char *conf) {
 	options.dectiled = atoi(getresource("decoratetiled", STR(DECORATETILED)));
 	options.hidebastards = atoi(getresource("hidebastards", "0"));
 	options.focus = atoi(getresource("sloppy", "0"));
+	options.gap = atoi(getresource("gap", STR(DEFGAP)));
+	options.margin = atoi(getresource("margin", STR(DEFMARGIN)));
 	options.snap = atoi(getresource("snap", STR(SNAP)));
 
 	for (m = monitors; m; m = m->next) {
@@ -2038,7 +2042,7 @@ bstack(Monitor * m) {
 
 void
 tile(Monitor * m) {
-	int nx, ny, nw, nh, mw, mh;
+	int nx, ny, nw, nh, mw, mh, ma, ga;
 	unsigned int i, n, th;
 	Client *c, *mc;
 
@@ -2056,6 +2060,8 @@ tile(Monitor * m) {
 	nx = m->wax;
 	ny = m->way;
 	nw = 0;
+	ma = 0;
+	ga = 0;
 	for (i = 0, c = mc = nexttiled(clients, m); c; c = nexttiled(c->next, m), i++) {
 		c->ismax = False;
 		if (i < views[m->curtag].nmaster) {	/* master */
@@ -2065,6 +2071,16 @@ tile(Monitor * m) {
 			if (i + 1 == (n < views[m->curtag].nmaster ? n : views[m->curtag].nmaster))	/* remainder */
 				nh = m->way + m->wah - ny;
 			nh -= 2 * c->border;
+			/* margins */
+			ny = ny + options.margin;
+			nx = nx + options.margin;
+			nh = nh - options.margin;
+			nw = nw - options.margin * 2;
+			/* gaps */
+			ny = ny + options.gap;
+			nx = nx + options.gap;
+			nh = nh - options.gap * 2;
+			nw = nw - options.gap * 2;
 		} else {	/* tile window */
 			if (i == views[m->curtag].nmaster) {
 				ny = m->way;
@@ -2076,7 +2092,24 @@ tile(Monitor * m) {
 				nh = (m->way + m->wah) - ny - 2 * c->border;
 			else
 				nh = th - 2 * c->border;
+			/* margins */
+			if (ma == 0) {
+				ma = 1;
+				ny = ny + options.margin;
+				nh = nh - options.margin;
+				nw = nw - options.margin;
+			}
+			/* gaps */
+			if (ga == 0) {
+				ga = 1;
+				nx = nx + options.gap;
+				nw = nw - options.gap * 2;
+			}
+			ny = ny + options.gap;
+			nh = nh - options.gap * 2;
 		}
+		/* margins (last iteration) */
+		nh = nh - options.margin;
 		resize(c, nx, ny, nw, nh, False);
 		if (n > views[m->curtag].nmaster && th != (unsigned int)m->wah) {
 			ny = c->y + c->h + 2 * c->border;

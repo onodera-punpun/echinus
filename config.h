@@ -1,5 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#define BORDERPX		1
+#define BORDERPX		0
 #define NF_OPACITY		0.9
 #define FONT			"fixed-9"
 #define NORMBORDERCOLOR		"#cccccc"
@@ -15,9 +15,9 @@
 #define CLOSEPIXMAP		"close.xbm"
 #define MINWIDTH		12
 #define MINHEIGHT		12
-#define TITLEHEIGHT		0
-#define COMMAND			"xterm"
+#define TITLEHEIGHT		30
+#define COMMAND			"urxvt"
 #define DEFMWFACT		0.6	/* master width factor [0.1 .. 0.9] */
 #define DEFNMASTER		1	/* number of windows in master area */
 #define SNAP			5	/* snap pixel */
-#define DECORATETILED		0	/* set to 1 to draw titles in tiled layouts */
+#define DECORATETILED		1	/* set to 1 to draw titles in tiled layouts */
