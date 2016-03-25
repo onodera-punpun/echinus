@@ -2153,7 +2153,7 @@ togglefloatingtag(const char *arg) {
 	char *torf;
 
 	if (!sel)
-		return;
+		togglefloatingtag(NULL);
 
 	sel->isfloating = !sel->isfloating;
 	updateframe(sel);
