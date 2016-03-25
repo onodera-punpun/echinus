@@ -198,6 +198,8 @@ struct {
 	int margin;
 	int snap;
 	char command[255];
+	char scrolldown[255];
+	char scrollup[255];
 } options;
 
 Layout layouts[] = {
@@ -399,10 +401,10 @@ buttonpress(XEvent * e) {
 			spawn(options.command);
 			break;
 		case Button4:
-			viewlefttag(NULL);
+			spawn(options.scrolldown);
 			break;
 		case Button5:
-			viewrighttag(NULL);
+			spawn(options.scrollup);
 			break;
 		}
 		return;
@@ -1948,6 +1950,10 @@ setup(char *conf) {
 	options.attachaside = atoi(getresource("attachaside", "1"));
 	strncpy(options.command, getresource("command", COMMAND), LENGTH(options.command));
 	options.command[LENGTH(options.command) - 1] = '\0';
+	strncpy(options.scrolldown, getresource("scrolldown", SCROLLDOWN), LENGTH(options.scrolldown));
+	options.scrolldown[LENGTH(options.scrolldown) - 1] = '\0';
+	strncpy(options.scrollup, getresource("scrollup", SCROLLUP), LENGTH(options.scrollup));
+	options.scrollup[LENGTH(options.scrollup) - 1] = '\0';
 	options.dectiled = atoi(getresource("decoratetiled", STR(DECORATETILED)));
 	options.hidebastards = atoi(getresource("hidebastards", "0"));
 	options.focus = atoi(getresource("sloppy", "0"));
@@ -2147,13 +2153,13 @@ togglefloatingwin(const char *arg) {
 	arrange(curmonitor());
 }
 
+// TODO: sometime I need to double press and windows fuck up..
 void
 togglefloatingtag(const char *arg) {
-	Client *c;
 	char *torf;
 
 	if (!sel)
-		togglefloatingtag(NULL);
+		return;
 
 	sel->isfloating = !sel->isfloating;
 	updateframe(sel);

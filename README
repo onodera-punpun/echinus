@@ -145,6 +145,12 @@ Terminal app
 
         Application to run on right window click on root window.
 
+    Echinus*scrolldown
+        Application to run on scroll-down on root window.
+
+     Echinus*scrollup
+        Application to run on scroll-up on root window.
+
 Title
 
     Echinus*title

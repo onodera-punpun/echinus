@@ -108,6 +108,8 @@ Echinus*decnmaster: AS + j = -1
 Echinus*incnmaster: AS + k = +1
 
 Echinus*command: xterm
+Echinus*scrolldown: xdesktop -p
+Echinus*scrolldown: xdesktop -n
 
 Echinus*rule0: Firefox.* web 0 1
 Echinus*rule4: Mplayer.* NULL 1 1

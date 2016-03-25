@@ -16,7 +16,9 @@
 #define MINWIDTH		12
 #define MINHEIGHT		12
 #define TITLEHEIGHT		30
-#define COMMAND			"urxvt"
+#define COMMAND			"xterm"
+#define SCROLLDOWN			"xterm"
+#define SCROLLUP			"xterm"
 #define DEFMWFACT		0.6	/* master width factor [0.1 .. 0.9] */
 #define DEFNMASTER		1	/* number of windows in master area */
 #define SNAP			5	/* snap pixel */
