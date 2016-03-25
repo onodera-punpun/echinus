@@ -246,14 +246,14 @@ ewmh_process_state_atom(Client *c, Atom state, int set) {
 				&& !c->ismax) {
 			c->wasfloating = c->isfloating;
 			if (!c->isfloating)
-				togglefloating(NULL);
+				togglefloatingwin(NULL);
 			togglemax(NULL);
 			data[0] = state;
 		} else if ((set == _NET_WM_STATE_REMOVE ||
 				set == _NET_WM_STATE_TOGGLE) && c->ismax) {
 			togglemax(NULL);
 			if (!c->wasfloating)
-				togglefloating(NULL);
+				togglefloatingwin(NULL);
 			data[0] = None;
 		}
 		XChangeProperty(dpy, c->win, atom[WindowState], XA_ATOM, 32,

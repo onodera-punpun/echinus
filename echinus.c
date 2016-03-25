@@ -135,7 +135,8 @@ void spawn(const char *arg);
 void tag(const char *arg);
 void tile(Monitor * m);
 void togglestruts(const char *arg);
-void togglefloating(const char *arg);
+void togglefloatingwin(const char *arg);
+void togglefloatingtag(const char *arg);
 void togglemax(const char *arg);
 void togglefill(const char *arg);
 void toggletag(const char *arg);
@@ -447,18 +448,18 @@ buttonpress(XEvent * e) {
 		}
 		if (ev->button == Button1) {
 			if (!FEATURES(curlayout, OVERLAP) && !c->isfloating)
-				togglefloating(NULL);
+				togglefloatingwin(NULL);
 			if (c->ismax)
 				togglemax(NULL);
 			mousemove(c);
 		} else if (ev->button == Button2) {
 			if (!FEATURES(curlayout, OVERLAP) && c->isfloating)
-				togglefloating(NULL);
+				togglefloatingwin(NULL);
 			else
 				zoom(NULL);
 		} else if (ev->button == Button3) {
 			if (!FEATURES(curlayout, OVERLAP) && !c->isfloating)
-				togglefloating(NULL);
+				togglefloatingwin(NULL);
 			if (c->ismax)
 				togglemax(NULL);
 			mouseresize(c);
@@ -2127,7 +2128,7 @@ togglestruts(const char *arg) {
 }
 
 void
-togglefloating(const char *arg) {
+togglefloatingwin(const char *arg) {
 	if (!sel)
 		return;
 
@@ -2144,6 +2145,21 @@ togglefloating(const char *arg) {
 		save(sel);
 	}
 	arrange(curmonitor());
+}
+
+void
+togglefloatingtag(const char *arg) {
+	unsigned int i, j;
+
+	if (!sel)
+		return;
+	i = i;
+	sel->tags[i] = !sel->tags[i];
+	for (j = 0; j < ntags && !sel->tags[j]; j++);
+	if (j == ntags)
+		sel->tags[i] = True;	/* at least one tag must be enabled */
+	drawclient(sel);
+	arrange(NULL);
 }
 
 void

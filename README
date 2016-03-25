@@ -222,9 +222,13 @@ Keybindings
      
      Close window in focus
 
-    Echinus*togglefloating
+    Echinus*togglefloatingwin
 
      Toggle floating/tiled
+
+    Echinus*togglefloatingtag
+
+     Toggle floating/tiled for the whole tag
 
     Echinus*view#
 
