@@ -39,6 +39,10 @@ Main settings
 
         Gap size between tiling windows in pixels.
 
+    Echinus*margin
+
+        Margin size in pixels when in tiling/monocle mode.
+
     Echinus*mwfact
 
         Space occupied by master window in tiled layout (fraction of 1).
