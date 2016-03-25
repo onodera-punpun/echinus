@@ -2149,27 +2149,20 @@ togglefloatingwin(const char *arg) {
 
 void
 togglefloatingtag(const char *arg) {
-	unsigned int i, j;
+	Client *c;
+	char *torf;
 
 	if (!sel)
 		return;
 
-	if (sel->isfloating) {
-		i = idxoftag("t");
-		sel->tags[i] = !sel->tags[i];
-		for (j = 0; j < ntags && !sel->tags[j]; j++);
-		if (j == ntags)
-			sel->tags[i] = True;	/* at least one tag must be enabled */
-		drawclient(sel);
-	} else {
-		i = idxoftag("i");
-		sel->tags[i] = !sel->tags[i];
-		for (j = 0; j < ntags && !sel->tags[j]; j++);
-		if (j == ntags)
-			sel->tags[i] = True;	/* at least one tag must be enabled */
-		drawclient(sel);
-	}
-	arrange(NULL);
+	sel->isfloating = !sel->isfloating;
+	updateframe(sel);
+	if (sel->isfloating)
+		torf = "i";
+	else
+		torf = "t";
+
+	setlayout(torf);
 }
 
 void
