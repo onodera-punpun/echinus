@@ -2153,12 +2153,22 @@ togglefloatingtag(const char *arg) {
 
 	if (!sel)
 		return;
-	i = i;
-	sel->tags[i] = !sel->tags[i];
-	for (j = 0; j < ntags && !sel->tags[j]; j++);
-	if (j == ntags)
-		sel->tags[i] = True;	/* at least one tag must be enabled */
-	drawclient(sel);
+
+	if (sel->isfloating) {
+		i = idxoftag("t");
+		sel->tags[i] = !sel->tags[i];
+		for (j = 0; j < ntags && !sel->tags[j]; j++);
+		if (j == ntags)
+			sel->tags[i] = True;	/* at least one tag must be enabled */
+		drawclient(sel);
+	} else {
+		i = idxoftag("i");
+		sel->tags[i] = !sel->tags[i];
+		for (j = 0; j < ntags && !sel->tags[j]; j++);
+		if (j == ntags)
+			sel->tags[i] = True;	/* at least one tag must be enabled */
+		drawclient(sel);
+	}
 	arrange(NULL);
 }
 
