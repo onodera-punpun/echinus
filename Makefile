@@ -32,7 +32,7 @@ SRC     = draw.c echinus.c ewmh.c parse.c
 HEADERS = config.h echinus.h
 OBJ     = $(SRC:.c=.o)
 
-all: echinus ${HEADERS}
+all: echinus $(HEADERS)
 
 .c.o:
 	@echo CC $<
@@ -40,8 +40,8 @@ all: echinus ${HEADERS}
 
 $(OBJ): $(HEADERS)
 
-echinus: ${OBJ} ${SRC} ${HEADERS}
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${OBJ} ${LIBS}
+echinus: $(OBJ) $(SRC) $(HEADERS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(LIBS)
 
 clean:
 	$(RM) echinus $(OBJ) echinus-$(VERSION).tar.gz *~
