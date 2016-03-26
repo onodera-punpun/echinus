@@ -14,12 +14,13 @@
  * set the override_redirect flag.  Clients are organized in a global
  * doubly-linked client list, the focus history is remembered through a global
  * stack list. Each client contains an array of Bools of the same size as the
- * global tags array to indicate the tags of a client.	
+ * global tags array to indicate the tags of a client.
  *
  * Keys and tagging rules are organized as arrays and defined in config.h.
  *
  * To understand everything else, start reading main().
  */
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/select.h>
@@ -52,21 +53,17 @@
 #endif
 #include "echinus.h"
 
-/* macros */
-#define BUTTONMASK		(ButtonPressMask | ButtonReleaseMask)
-#define CLEANMASK(mask)		(mask & ~(numlockmask | LockMask))
-#define MOUSEMASK		(BUTTONMASK | PointerMotionMask)
-#define CLIENTMASK	        (PropertyChangeMask | StructureNotifyMask | FocusChangeMask)
-#define CLIENTNOPROPAGATEMASK 	(BUTTONMASK | ButtonMotionMask)
+#define BUTTONMASK              (ButtonPressMask | ButtonReleaseMask)
+#define CLEANMASK(mask)         (mask & ~(numlockmask | LockMask))
+#define MOUSEMASK               (BUTTONMASK | PointerMotionMask)
+#define CLIENTMASK              (PropertyChangeMask | StructureNotifyMask | FocusChangeMask)
+#define CLIENTNOPROPAGATEMASK   (BUTTONMASK | ButtonMotionMask)
 #define FRAMEMASK               (MOUSEMASK | SubstructureRedirectMask | SubstructureNotifyMask | EnterWindowMask | LeaveWindowMask)
 
+enum { StrutsOn, StrutsOff, StrutsHide };
+enum { CurNormal, CurResize, CurMove, CurLast };
+enum { Clk2Focus, SloppyFloat, AllSloppy, SloppyRaise };
 
-/* enums */
-enum { StrutsOn, StrutsOff, StrutsHide };		    /* struts position */
-enum { CurNormal, CurResize, CurMove, CurLast };	    /* cursor */
-enum { Clk2Focus, SloppyFloat, AllSloppy, SloppyRaise };    /* focus model */
-
-/* function declarations */
 void applyatoms(Client * c);
 void applyrules(Client * c);
 void arrange(Monitor * m);
@@ -154,7 +151,7 @@ void updatesizehints(Client * c);
 void updateframe(Client * c);
 void updatetitle(Client * c);
 void view(const char *arg);
-void viewprevtag(const char *arg);	/* views previous selected tags */
+void viewprevtag(const char *arg);
 void viewlefttag(const char *arg);
 void viewrighttag(const char *arg);
 int xerror(Display * dpy, XErrorEvent * ee);
@@ -163,7 +160,6 @@ int xerrorstart(Display * dsply, XErrorEvent * ee);
 int (*xerrorxlib) (Display *, XErrorEvent *);
 void zoom(const char *arg);
 
-/* variables */
 char **cargv;
 Display *dpy;
 int screen;
@@ -188,7 +184,7 @@ unsigned int nkeys;
 unsigned int nrules;
 unsigned int modkey;
 unsigned int numlockmask;
-/* configuration, allows nested code to access above variables */
+
 #include "config.h"
 
 struct {
@@ -205,7 +201,6 @@ struct {
 } options;
 
 Layout layouts[] = {
-	/* function symbol features */
 	{  NULL,    'i',   OVERLAP },
 	{  dwindle, 'd',   MWFACT | NMASTER | ZOOM },
 	{  spiral,  's',   MWFACT | NMASTER | ZOOM },
@@ -237,14 +232,13 @@ void (*handler[LASTEvent]) (XEvent *) = {
 #endif
 };
 
-/* function implementations */
 void
 applyatoms(Client * c) {
 	unsigned int *t;
 	unsigned long n;
 	int i;
 
-	/* restore tag number from atom */
+	/* Restore tag number from atom */
 	t = (unsigned int*)getatom(c->win, atom[WindowDesk], &n);
 	if (n != 0) {
 		if (*t >= ntags)
@@ -262,11 +256,12 @@ applyrules(Client * c) {
 	Bool matched = False;
 	XClassHint ch = { 0 };
 
-	/* rule matching */
+	/* Rule matching */
 	XGetClassHint(dpy, c->win, &ch);
 	snprintf(buf, sizeof(buf), "%s:%s:%s",
 	    ch.res_class ? ch.res_class : "", ch.res_name ? ch.res_name : "", c->name);
 	buf[LENGTH(buf)-1] = 0;
+
 	for (i = 0; i < nrules; i++)
 		if (rules[i]->propregex && !regexec(rules[i]->propregex, buf, 1, &tmp, 0)) {
 			c->isfloating = rules[i]->isfloating;
@@ -278,6 +273,7 @@ applyrules(Client * c) {
 				}
 			}
 		}
+
 	if (ch.res_class)
 		XFree(ch.res_class);
 	if (ch.res_name)
@@ -294,11 +290,11 @@ arrangefloats(Monitor * m) {
 
 	for (c = stack; c; c = c->snext) {
 		if (isvisible(c, m) && !c->isbastard &&
-			       	(c->isfloating || MFEATURES(m, OVERLAP))
-			       	&& !c->ismax && !c->isicon) {
+				(c->isfloating || MFEATURES(m, OVERLAP))
+				&& !c->ismax && !c->isicon) {
 			DPRINTF("%d %d\n", c->rx, c->ry);
 			if (!(om = getmonitor(c->rx + c->rw/2,
-				       	c->ry + c->rh/2)))
+					c->ry + c->rh/2)))
 				continue;
 			dx = om->sx + om->sw - c->rx;
 			dy = om->sy + om->sh - c->ry;
@@ -306,6 +302,7 @@ arrangefloats(Monitor * m) {
 				dx = m->sw;
 			if (dy > m->sh) 
 				dy = m->sh;
+
 			resize(c, m->sx + m->sw - dx, m->sy + m->sh - dy, c->rw, c->rh, True);
 			save(c);
 		}
@@ -318,8 +315,10 @@ arrangemon(Monitor * m) {
 
 	if (views[m->curtag].layout->arrange)
 		views[m->curtag].layout->arrange(m);
+
 	arrangefloats(m);
 	restack(m);
+
 	for (c = stack; c; c = c->snext) {
 		if ((clientmonitor(c) == m) && ((!c->isbastard && !c->isicon) ||
 			(c->isbastard && views[m->curtag].barpos == StrutsOn))) {
@@ -412,6 +411,7 @@ buttonpress(XEvent * e) {
 		}
 		return;
 	}
+
 	if ((c = getclient(ev->window, clients, ClientTitle))) {
 		DPRINTF("TITLE %s: 0x%x\n", c->name, (int) ev->window);
 		focus(c);
@@ -433,6 +433,7 @@ buttonpress(XEvent * e) {
 				return;
 			}
 		}
+
 		for (i = 0; i < LastBtn; i++)
 			button[i].pressed = 0;
 		drawclient(c);
@@ -480,7 +481,7 @@ checkotherwm(void) {
 	otherwm = False;
 	XSetErrorHandler(xerrorstart);
 
-	/* this causes an error if some other window manager is running */
+	/* This causes an error if some other window manager is running */
 	XSelectInput(dpy, root, SubstructureRedirectMask);
 	XSync(dpy, False);
 	if (otherwm)
@@ -500,7 +501,7 @@ cleanup(void) {
 	free(tags);
 	free(keys);
 	initmonitors(NULL);
-	/* free resource database */
+	/* Free resource database */
 	XrmDestroyDatabase(xrdb);
 	deinitstyle();
 	XUngrabKey(dpy, AnyKey, AnyModifier, root);
@@ -578,17 +579,17 @@ configurerequest(XEvent * e) {
 			if (ev->value_mask & CWHeight)
 				h = ev->height + c->th;
 			cm = getmonitor(x, y);
-			if (!(ev->value_mask & (CWX | CWY)) /* resize request */
+			if (!(ev->value_mask & (CWX | CWY)) /* Resize request */
 			    && (ev->value_mask & (CWWidth | CWHeight))) {
 				DPRINTF("RESIZE %s (%d,%d)->(%d,%d)\n", c->name, c->w, c->h, w, h);
 				resize(c, c->x, c->y, w, h, True);
 				save(c);
-			} else if ((ev->value_mask & (CWX | CWY)) /* move request */
+			} else if ((ev->value_mask & (CWX | CWY)) /* Move request */
 			    && !(ev->value_mask & (CWWidth | CWHeight))) {
 				DPRINTF("MOVE %s (%d,%d)->(%d,%d)\n", c->name, c->x, c->y, x, y);
 				resize(c, x, y, c->w, c->h, True);
 				save(c);
-			} else if ((ev->value_mask & (CWX | CWY)) /* move and resize request */
+			} else if ((ev->value_mask & (CWX | CWY)) /* Move and resize request */
 			    && (ev->value_mask & (CWWidth | CWHeight))) {
 				DPRINTF("MOVE&RESIZE(MOVE) %s (%d,%d)->(%d,%d)\n", c->name, c->x, c->y, ev->x, ev->y);
 				DPRINTF("MOVE&RESIZE(RESIZE) %s (%d,%d)->(%d,%d)\n", c->name, c->w, c->h, ev->width, ev->height);
@@ -665,7 +666,7 @@ enternotify(XEvent * e) {
 	if ((c = getclient(ev->window, clients, ClientFrame))) {
 		if (c->isbastard)
 			return;
-		/* focus when switching monitors */
+		/* Focus when switching monitors */
 		if (!isvisible(sel, curmonitor()))
 			focus(c);
 		switch (options.focus) {
@@ -731,7 +732,7 @@ givefocus(Client * c) {
 		ce.xclient.window = c->win;
 		ce.xclient.format = 32;
 		ce.xclient.data.l[0] = atom[WMTakeFocus];
-		ce.xclient.data.l[1] = CurrentTime;	/* incorrect */
+		ce.xclient.data.l[1] = CurrentTime; /* Incorrect */
 		ce.xclient.data.l[2] = 0l;
 		ce.xclient.data.l[3] = 0l;
 		ce.xclient.data.l[4] = 0l;
@@ -753,7 +754,7 @@ focus(Client * c) {
 	if (c) {
 		detachstack(c);
 		attachstack(c);
-		/* unban(c); */
+		//unban(c);
 	}
 	sel = c;
 	if (!selscreen)
@@ -862,8 +863,8 @@ getclient(Window w, Client * list, int part) {
 	Client *c;
 
 #define ClientPart(_c, _part) (((_part) == ClientWindow) ? (_c)->win : \
-			       ((_part) == ClientTitle) ? (_c)->title : \
-			       ((_part) == ClientFrame) ? (_c)->frame : 0)
+					((_part) == ClientTitle) ? (_c)->title : \
+					((_part) == ClientFrame) ? (_c)->frame : 0)
 
 	for (c = list; c && (ClientPart(c, part)) != w; c = c->next);
 
@@ -1126,7 +1127,7 @@ manage(Window w, XWindowAttributes * wa) {
 	XSetWindowBorder(dpy, c->frame, style.color.norm[ColBorder]);
 
 	twa.event_mask = ExposureMask | MOUSEMASK;
-	/* we create title as root's child as a workaround for 32bit visuals */
+	/* We create title as root's child as a workaround for 32bit visuals */
 	if (c->title) {
 		c->title = XCreateWindow(dpy, root, 0, 0, c->w, c->th,
 		    0, DefaultDepth(dpy, screen), CopyFromParent,
@@ -1154,7 +1155,7 @@ manage(Window w, XWindowAttributes * wa) {
 	XMapWindow(dpy, c->win);
 	wc.border_width = 0;
 	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc);
-	configure(c);	/* propagates border_width, if size doesn't change */
+	configure(c); /* Propagates border_width, if size doesn't change */
 	if (checkatom(c->win, atom[WindowState], atom[WindowStateFs]))
 		ewmh_process_state_atom(c, atom[WindowStateFs], 1);
 	ban(c);
@@ -1294,7 +1295,7 @@ mousemove(Client * c) {
 			break;
 		case MotionNotify:
 			XSync(dpy, False);
-			/* we are probably moving to a different monitor */
+			/* We are probably moving to a different monitor */
 			if (!(nm = curmonitor()))
 				break;
 			nx = ocx + (ev.xmotion.x_root - x1);
@@ -1399,7 +1400,7 @@ place(Client *c) {
 	Monitor *m;
 	int d = style.titleheight;
 
-	/* XXX: do something better */
+	/* XXX: Do something better */
 	getpointer(&x, &y);
 	DPRINTF("%d %d\n", x, y);
 	m = getmonitor(x, y);
@@ -1475,17 +1476,17 @@ resize(Client * c, int x, int y, int w, int h, Bool sizehints) {
 
 	if (sizehints) {
 		h -= c->th;
-		/* set minimum possible */
+		/* Set minimum possible */
 		if (w < 1)
 			w = 1;
 		if (h < 1)
 			h = 1;
 
-		/* temporarily remove base dimensions */
+		/* Temporarily remove base dimensions */
 		w -= c->basew;
 		h -= c->baseh;
 
-		/* adjust for aspect limits */
+		/* Adjust for aspect limits */
 		if (c->minay > 0 && c->maxay > 0 && c->minax > 0 && c->maxax > 0) {
 			if (w * c->maxay > h * c->maxax)
 				w = h * c->maxax / c->maxay;
@@ -1493,13 +1494,13 @@ resize(Client * c, int x, int y, int w, int h, Bool sizehints) {
 				h = w * c->minay / c->minax;
 		}
 
-		/* adjust for increment value */
+		/* Adjust for increment value */
 		if (c->incw)
 			w -= w % c->incw;
 		if (c->inch)
 			h -= h % c->inch;
 
-		/* restore base dimensions */
+		/* Restore base dimensions */
 		w += c->basew;
 		h += c->baseh;
 
@@ -1515,7 +1516,7 @@ resize(Client * c, int x, int y, int w, int h, Bool sizehints) {
 	}
 	if (w <= 0 || h <= 0)
 		return;
-	/* offscreen appearance fixes */
+	/* Offscreen appearance fixes */
 	if (x > DisplayWidth(dpy, screen))
 		x = DisplayWidth(dpy, screen) - w - 2 * c->border;
 	if (y > DisplayHeight(dpy, screen))
@@ -1593,7 +1594,7 @@ run(void) {
 	int xfd;
 	XEvent ev;
 
-	/* main event loop */
+	/* Main event loop */
 	XSync(dpy, False);
 	xfd = ConnectionNumber(dpy);
 	while (running) {
@@ -1607,7 +1608,7 @@ run(void) {
 		while (XPending(dpy)) {
 			XNextEvent(dpy, &ev);
 			if (handler[ev.type])
-				(handler[ev.type]) (&ev);	/* call handler */
+				(handler[ev.type]) (&ev); /* Call handler */
 		}
 	}
 }
@@ -1638,7 +1639,7 @@ scan(void) {
 			    || getstate(wins[i]) == NormalState)
 				manage(wins[i], &wa);
 		}
-		for (i = 0; i < num; i++) {	/* now the transients */
+		for (i = 0; i < num; i++) { /* Now the transients */
 			if (!XGetWindowAttributes(dpy, wins[i], &wa))
 				continue;
 			if (XGetTransientForHint(dpy, wins[i], &d1)
@@ -1705,7 +1706,7 @@ setmwfact(const char *arg) {
 
 	if (!FEATURES(curlayout, MWFACT))
 		return;
-	/* arg handling, manipulate mwfact */
+	/* Arg handling, manipulate mwfact */
 	if (arg == NULL)
 		views[curmontag].mwfact = DEFMWFACT;
 	else if (sscanf(arg, "%lf", &delta) == 1) {
@@ -1729,7 +1730,7 @@ initlayouts() {
 	int nmaster;
 	const char *deflayout;
 
-	/* init layouts */
+	/* Init layouts */
 	mwfact = atof(getresource("mwfact", STR(DEFMWFACT)));
 	nmaster = atoi(getresource("nmaster", STR(DEFNMASTER)));
 	deflayout = getresource("deflayout", "i");
@@ -1763,7 +1764,7 @@ initmonitors(XEvent * e) {
 	int ncrtc = 0;
 	int dummy1, dummy2, major, minor;
 
-	/* free */
+	/* Free */
 	if (monitors) {
 		m = monitors;
 		do {
@@ -1777,12 +1778,12 @@ initmonitors(XEvent * e) {
 	}
 	if (!running)
 	    return;
-	/* initial Xrandr setup */
+	/* Initial Xrandr setup */
 	if (XRRQueryExtension(dpy, &dummy1, &dummy2))
 		if (XRRQueryVersion(dpy, &major, &minor) && major < 1)
 			goto no_xrandr;
 
-	/* map virtual screens onto physical screens */
+	/* Map virtual screens onto physical screens */
 	sr = XRRGetScreenResources(dpy, root);
 	if (sr == NULL)
 		goto no_xrandr;
@@ -1873,7 +1874,7 @@ setup(char *conf) {
 	XSetWindowAttributes wa;
 	char oldcwd[256], path[256] = "/";
 	char *home, *slash;
-	/* configuration files to open (%s gets converted to $HOME) */
+	/* Configuration files to open (%s gets converted to $HOME) */
 	const char *confs[] = {
 		conf,
 		"%s/.echinus/echinusrc",
@@ -1881,12 +1882,12 @@ setup(char *conf) {
 		NULL
 	};
 
-	/* init cursors */
+	/* Init cursors */
 	cursor[CurNormal] = XCreateFontCursor(dpy, XC_left_ptr);
 	cursor[CurResize] = XCreateFontCursor(dpy, XC_bottom_right_corner);
 	cursor[CurMove] = XCreateFontCursor(dpy, XC_fleur);
 
-	/* init modifier map */
+	/* Init modifier map */
 	modmap = XGetModifierMapping(dpy);
 	for (i = 0; i < 8; i++)
 		for (j = 0; j < modmap->max_keypermod; j++) {
@@ -1896,7 +1897,7 @@ setup(char *conf) {
 		}
 	XFreeModifiermap(modmap);
 
-	/* select for events */
+	/* Select for events */
 	wa.event_mask = SubstructureRedirectMask | SubstructureNotifyMask
 	    | EnterWindowMask | LeaveWindowMask | StructureNotifyMask |
 	    ButtonPressMask | ButtonReleaseMask;
@@ -1904,7 +1905,7 @@ setup(char *conf) {
 	XChangeWindowAttributes(dpy, root, CWEventMask | CWCursor, &wa);
 	XSelectInput(dpy, root, wa.event_mask);
 
-	/* init resource database */
+	/* Init resource database */
 	XrmInitialize();
 
 	home = getenv("HOME");
@@ -1917,28 +1918,24 @@ setup(char *conf) {
 		if (*confs[i] == '\0')
 			continue;
 		snprintf(conf, 255, confs[i], home);
-		/* retrieve path to chdir(2) to it */
+		/* Retrieve path to chdir(2) to it */
 		slash = strrchr(conf, '/');
 		if (slash)
 			snprintf(path, slash - conf + 1, "%s", conf);
 		chdir(path);
 		xrdb = XrmGetFileDatabase(conf);
-		/* configuration file loaded successfully; break out */
+		/* Configuration file loaded successfully; break out */
 		if (xrdb)
 			break;
 	}
 	if (!xrdb)
 		fprintf(stderr, "echinus: no configuration file found, using defaults\n");
 
-	/* init EWMH atom */
 	initewmh();
-
-	/* init tags */
 	inittags();
-	/* init geometry */
 	initmonitors(NULL);
 
-	/* init modkey */
+	/* Init modkey */
 	initrules();
 	initkeys();
 	initlayouts();
@@ -1948,7 +1945,7 @@ setup(char *conf) {
 
 	grabkeys();
 
-	/* init appearance */
+	/* Init appearance */
 	initstyle();
 	options.attachaside = atoi(getresource("attachaside", "1"));
 	strncpy(options.command, getresource("command", COMMAND), LENGTH(options.command));
@@ -1972,7 +1969,7 @@ setup(char *conf) {
 
 	chdir(oldcwd);
 
-	/* multihead support */
+	/* Multihead support */
 	selscreen = XQueryPointer(dpy, root, &w, &w, &d, &d, &d, &d, &mask);
 }
 
@@ -2146,7 +2143,7 @@ togglefloatingwin(const char *arg) {
 	arrange(curmonitor());
 }
 
-// TODO: sometime I need to double press and windows fuck up..
+// XXX: Sometime I need to double press and windows fuck up..
 void
 togglefloatingtag(const char *arg) {
 	char *torf;
@@ -2242,7 +2239,7 @@ toggletag(const char *arg) {
 	sel->tags[i] = !sel->tags[i];
 	for (j = 0; j < ntags && !sel->tags[j]; j++);
 	if (j == ntags)
-		sel->tags[i] = True;	/* at least one tag must be enabled */
+		sel->tags[i] = True; /* At least one tag must be enabled */
 	drawclient(sel);
 	arrange(NULL);
 }
@@ -2280,8 +2277,8 @@ toggleview(const char *arg) {
 			m->seltags[i] = False;
 			for (j = 0; j < ntags && !m->seltags[j]; j++);
 			if (j == ntags) {
-				m->seltags[i] = True;	/* at least one tag must be viewed */
-				cm->seltags[i] = False; /* can't toggle */
+				m->seltags[i] = True;   /* At least one tag must be viewed */
+				cm->seltags[i] = False; /* Can't toggle */
 				j = i;
 			}
 			if (m->curtag == i)
@@ -2355,7 +2352,7 @@ unmanage(Client * c) {
 	if (!running)
 		XMapWindow(dpy, c->win);
 	wc.border_width = c->oldborder;
-	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc);	/* restore border */
+	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* Restore border */
 	detach(c);
 	detachstack(c);
 	if (sel == c)
@@ -2495,7 +2492,7 @@ updatetitle(Client * c) {
 
 /* There's no way to check accesses to destroyed windows, thus those cases are
  * ignored (ebastardly on UnmapNotify's).  Other types of errors call Xlibs
- * default error handler, which may call exit.	*/
+ * default error handler, which may call exit. */
 int
 xerror(Display * dsply, XErrorEvent * ee) {
 	if (ee->error_code == BadWindow
@@ -2510,7 +2507,7 @@ xerror(Display * dsply, XErrorEvent * ee) {
 	fprintf(stderr,
 	    "echinus: fatal error: request code=%d, error code=%d\n",
 	    ee->request_code, ee->error_code);
-	return xerrorxlib(dsply, ee);	/* may call exit */
+	return xerrorxlib(dsply, ee); /* May call exit */
 }
 
 int
