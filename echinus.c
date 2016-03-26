@@ -40,16 +40,17 @@
 #include <signal.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
-#include <X11/XF86keysym.h>
+//#include <X11/XF86keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <X11/XKBlib.h>
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
 #include <X11/Xresource.h>
 #include <X11/Xft/Xft.h>
 #ifdef XRANDR
-#include <X11/extensions/Xrandr.h>
-#include <X11/extensions/randr.h>
+	#include <X11/extensions/Xrandr.h>
+	#include <X11/extensions/randr.h>
 #endif
 #include "echinus.h"
 
@@ -975,7 +976,7 @@ keypress(XEvent * e) {
 	if (!curmonitor())
 		return;
 	ev = &e->xkey;
-	keysym = XKeycodeToKeysym(dpy, (KeyCode) ev->keycode, 0);
+	keysym = XkbKeycodeToKeysym(dpy, (KeyCode) ev->keycode, 0, 0);
 	for (i = 0; i < nkeys; i++)
 		if (keysym == keys[i]->keysym
 		    && CLEANMASK(keys[i]->mod) == CLEANMASK(ev->state)) {
