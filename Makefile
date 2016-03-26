@@ -49,7 +49,7 @@ clean:
 install:
 	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/bin
 	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/share/echinus
-	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/share/man
+	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/share/man/man1
 	$(INSTALL_PROG) echinus $(DESTDIR)$(PREFIX)/bin/echinus
 	$(INSTALL_FILE) echinusrc $(DESTDIR)$(PREFIX)/share/echinus/echinusrc
 	for file in $(PIXMAPS); do \
