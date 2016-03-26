@@ -50,8 +50,7 @@ install:
 	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/bin
 	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/share/echinus
 	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/share/man
-	$(INSTALL_DIR) $(DESTDIR)$(PREFIX)/share/doc
-	$(INSTALL_RPOG) echinus $(DESTDIR)$(PREFIX)/bin/echinus
+	$(INSTALL_PROG) echinus $(DESTDIR)$(PREFIX)/bin/echinus
 	$(INSTALL_FILE) echinusrc $(DESTDIR)$(PREFIX)/share/echinus/echinusrc
 	for file in $(PIXMAPS); do \
 		$(INSTALL_FILE) $$(file) $(DESTDIR)$(PREFIX)/share/echinus/$$(file) ; \
