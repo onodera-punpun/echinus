@@ -133,7 +133,9 @@ void setmwfact(const char *arg);
 void setup(char *);
 void spawn(const char *arg);
 void tag(const char *arg);
-void tile(Monitor * m);
+void fibonacci(Monitor * m, int s);
+void dwindle(Monitor * m);
+void spiral(Monitor * m);
 void togglestruts(const char *arg);
 void togglefloatingwin(const char *arg);
 void togglefloatingtag(const char *arg);
@@ -203,13 +205,14 @@ struct {
 } options;
 
 Layout layouts[] = {
-	/* function	symbol	features */
-	{  NULL,	'i',	OVERLAP },
-	{  tile,	't',	MWFACT | NMASTER | ZOOM },
-	{  bstack,	'b',	MWFACT | ZOOM },
-	{  monocle,	'm',	0 },
-	{  NULL,	'f',	OVERLAP },
-	{  NULL,	'\0',	0 },
+	/* function symbol features */
+	{  NULL,    'i',   OVERLAP },
+	{  dwindle, 'd',   MWFACT | NMASTER | ZOOM },
+	{  spiral,  's',   MWFACT | NMASTER | ZOOM },
+	{  bstack,  'b',   MWFACT | ZOOM },
+	{  monocle, 'm',   0 },
+	{  NULL,    'f',   OVERLAP },
+	{  NULL,    '\0',  0 },
 };
 
 void (*handler[LASTEvent]) (XEvent *) = {
@@ -2048,80 +2051,72 @@ bstack(Monitor * m) {
 }
 
 void
-tile(Monitor * m) {
-	int nx, ny, nw, nh, mw, mh, ma, ga;
-	unsigned int i, n, th;
+fibonacci(Monitor * m, int s) {
+	int nx, ny, nw, nh;
+	unsigned int i, n;
 	Client *c, *mc;
 
-	for (n = 0, c = nexttiled(clients, m); c; c = nexttiled(c->next, m))
-		n++;
+	for (n = 0, c = nexttiled(clients, m); c; c = nexttiled(c->next, m), n++);
+	if (n == 0)
+		return;
 
-	/* window geoms */
-	mh = (n <= views[m->curtag].nmaster) ? m->wah / (n >
-	    0 ? n : 1) : m->wah / (views[m->curtag].nmaster ? views[m->curtag].nmaster : 1);
-	mw = (n <= views[m->curtag].nmaster) ? m->waw : views[m->curtag].mwfact * m->waw;
-	th = (n > views[m->curtag].nmaster) ? m->wah / (n - views[m->curtag].nmaster) : 0;
-	if (n > views[m->curtag].nmaster && th < style.titleheight)
-		th = m->wah;
-
-	nx = m->wax;
-	ny = m->way;
-	nw = 0;
-	ma = 0;
-	ga = 0;
-	for (i = 0, c = mc = nexttiled(clients, m); c; c = nexttiled(c->next, m), i++) {
+	nx = m->wax - options.gap + options.margin;
+	ny = 0;
+	nw = m->waw + options.gap - options.margin * 2;
+	nh = m->wah + options.gap - options.margin * 2;
+	
+	for (i = 0, c = mc = nexttiled(clients, m); c; c = nexttiled(c->next, m)) {
 		c->ismax = False;
-		if (i < views[m->curtag].nmaster) {	/* master */
-			ny = m->way + i * (mh - c->border);
-			nw = mw - 2 * c->border;
-			nh = mh;
-			if (i + 1 == (n < views[m->curtag].nmaster ? n : views[m->curtag].nmaster))	/* remainder */
-				nh = m->way + m->wah - ny;
-			nh -= 2 * c->border;
-			/* margins */
-			ny = ny + options.margin;
-			nx = nx + options.margin;
-			nh = nh - options.margin;
-			nw = nw - options.margin * 2;
-			/* gaps */
-			ny = ny + options.gap;
-			nx = nx + options.gap;
-			nh = nh - options.gap * 2;
-			nw = nw - options.gap * 2;
-		} else {	/* tile window */
-			if (i == views[m->curtag].nmaster) {
-				ny = m->way;
-				nx += mc->w + mc->border;
-				nw = m->waw - nx - 2 * c->border + m->wax;
-			} else
-				ny -= c->border;
-			if (i + 1 == n)	/* remainder */
-				nh = (m->way + m->wah) - ny - 2 * c->border;
-			else
-				nh = th - 2 * c->border;
-			/* margins */
-			if (ma == 0) {
-				ma = 1;
-				ny = ny + options.margin;
-				nh = nh - options.margin;
-				nw = nw - options.margin;
+		if ((i % 2 && nh / 2 > 2 * c->border)
+		   || (!(i % 2) && nw / 2 > 2 * c->border)) {
+			if (i < n - 1) {
+				if (i % 2)
+					nh /= 2;
+				else
+					nw /= 2;
+				if ((i % 4) == 2 && !s)
+					nx += nw;
+				else if ((i % 4) == 3 && !s)
+					ny += nh;
 			}
-			/* gaps */
-			if (ga == 0) {
-				ga = 1;
-				nx = nx + options.gap;
-				nw = nw - options.gap * 2;
+			if ((i % 4) == 0) {
+				if (s)
+					ny += nh;
+				else
+					ny -= nh;
 			}
-			ny = ny + options.gap;
-			nh = nh - options.gap * 2;
+			else if ((i % 4) == 1)
+				nx += nw;
+			else if ((i % 4) == 2)
+				ny += nh;
+			else if ((i % 4) == 3) {
+				if (s)
+					nx += nw;
+				else
+					nx -= nw;
+			}
+			if (i == 0)
+			{
+				if(n != 1)
+					nw = m->waw * views[m->curtag].mwfact;
+				ny = m->way - options.gap + options.margin;
+			}
+			else if (i == 1)
+				nw = m->waw - nw + options.gap - options.margin * 2;
+			i++;
 		}
-		/* margins (last iteration) */
-		nh = nh - options.margin;
-		resize(c, nx, ny, nw, nh, False);
-		if (n > views[m->curtag].nmaster && th != (unsigned int)m->wah) {
-			ny = c->y + c->h + 2 * c->border;
-		}
+		resize(c, nx + options.gap, ny + options.gap, nw - 2 * c->border - options.gap, nh - 2 * c->border - options.gap, False);
 	}
+}
+
+void
+dwindle(Monitor * m) {
+	fibonacci(m, 1);
+}
+
+void
+spiral(Monitor * m) {
+	fibonacci(m, 0);
 }
 
 void
@@ -2144,10 +2139,8 @@ togglefloatingwin(const char *arg) {
 	sel->isfloating = !sel->isfloating;
 	updateframe(sel);
 	if (sel->isfloating) {
-		/* restore last known float dimensions */
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, False);
 	} else {
-		/* save last known float dimensions */
 		save(sel);
 	}
 	arrange(curmonitor());
@@ -2158,15 +2151,17 @@ void
 togglefloatingtag(const char *arg) {
 	char *torf;
 
-	if (!sel)
+	if (!sel) {
+		togglefloatingtag(arg);
 		return;
+	}
 
 	sel->isfloating = !sel->isfloating;
 	updateframe(sel);
 	if (sel->isfloating)
 		torf = "i";
 	else
-		torf = "t";
+		torf = "d";
 
 	setlayout(torf);
 }

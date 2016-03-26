@@ -13,7 +13,7 @@ DOCPREFIX?= ${PREFIX}/share/doc
 CONF?= ${CONFPREFIX}
 
 # includes and libs
-CFLAGS += -I. `pkg-config --cflags x11 xft`
+CFLAGS += -I. -O2 `pkg-config --cflags x11 xft`
 LIBS += `pkg-config --libs x11 xft`
 CPPFLAGS += -DVERSION=\"${VERSION}\" -DSYSCONFPATH=\"${CONF}\"
 

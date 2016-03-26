@@ -33,7 +33,8 @@ Main settings
 
     Echinus*deflayout
         Layout applied to tag if not explicitly set by tags.layout later.
-        One of: i - ifloating, f - floating, t - tiled, b - bottomstack, m - maximized. 
+        One of: i - intelegent floating, f - floating, d - dwindle tiling,
+        s - spiral tiling, b - bottomstack, m - maximized. 
 
     Echinus*gap
 
