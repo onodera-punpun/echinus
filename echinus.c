@@ -1951,15 +1951,16 @@ setup(char *conf) {
 	options.attachaside = atoi(getresource("attachaside", "1"));
 	strncpy(options.command, getresource("command", COMMAND), LENGTH(options.command));
 	options.command[LENGTH(options.command) - 1] = '\0';
-	strncpy(options.scrolldown, getresource("scrolldown", SCROLLDOWN), LENGTH(options.scrolldown));
-	options.scrolldown[LENGTH(options.scrolldown) - 1] = '\0';
-	strncpy(options.scrollup, getresource("scrollup", SCROLLUP), LENGTH(options.scrollup));
-	options.scrollup[LENGTH(options.scrollup) - 1] = '\0';
 	options.dectiled = atoi(getresource("decoratetiled", STR(DECORATETILED)));
+	options.scrolldown[LENGTH(options.scrolldown) - 1] = '\0';
 	options.hidebastards = atoi(getresource("hidebastards", "0"));
 	options.focus = atoi(getresource("sloppy", "0"));
 	options.gap = atoi(getresource("gap", STR(DEFGAP)));
 	options.margin = atoi(getresource("margin", STR(DEFMARGIN)));
+	strncpy(options.scrolldown, getresource("scrolldown", SCROLLDOWN), LENGTH(options.scrolldown));
+	options.scrolldown[LENGTH(options.scrolldown) - 1] = '\0';
+	strncpy(options.scrollup, getresource("scrollup", SCROLLUP), LENGTH(options.scrollup));
+	options.scrollup[LENGTH(options.scrollup) - 1] = '\0';
 	options.snap = atoi(getresource("snap", STR(SNAP)));
 
 	for (m = monitors; m; m = m->next) {
@@ -2144,22 +2145,16 @@ togglefloatingwin(const char *arg) {
 	arrange(curmonitor());
 }
 
-// XXX: Sometime I need to double press and windows fuck up..
 void
 togglefloatingtag(const char *arg) {
 	char *torf;
 
-	if (!sel) {
-		togglefloatingtag(arg);
-		return;
-	}
-
-	sel->isfloating = !sel->isfloating;
-	updateframe(sel);
-	if (sel->isfloating)
-		torf = "i";
-	else
+	togglefloatingwin(arg);
+	if (FEATURES(curlayout, OVERLAP))
+		// XXX: Add deftilinglayout here
 		torf = "d";
+	else
+		torf = "i";
 
 	setlayout(torf);
 }
