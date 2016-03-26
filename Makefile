@@ -53,7 +53,7 @@ install:
 	$(INSTALL_PROG) echinus $(DESTDIR)$(PREFIX)/bin/echinus
 	$(INSTALL_FILE) echinusrc $(DESTDIR)$(PREFIX)/share/echinus/echinusrc
 	for file in $(PIXMAPS); do \
-		$(INSTALL_FILE) $$(file) $(DESTDIR)$(PREFIX)/share/echinus/$$(file) ; \
+		$(INSTALL_FILE) $${file} $(DESTDIR)$(PREFIX)/share/echinus/$${file} ; \
 	done ;
 	sed -i -e "s/VERSION/$(VERSION)/g;s|CONFDIR|$(DESTDIR)$(PREFIX)/share/echinus|g" echinus.1
 	$(INSTALL_FILE) echinus.1 $(DESTDIR)$(PREFIX)/share/man/man1/echinus.1
