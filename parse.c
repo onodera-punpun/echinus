@@ -18,42 +18,42 @@ typedef struct {
 } KeyItem;
 
 static KeyItem KeyItems[] = {
-	{ "togglestruts",	togglestruts	},
-	{ "focusicon",		focusicon	},
-	{ "focusnext",		focusnext	},
-	{ "focusprev",		focusprev	},
-	{ "viewprevtag",	viewprevtag	},
-	{ "viewlefttag",	viewlefttag	},
-	{ "viewrighttag",	viewrighttag	},
-	{ "quit",		quit		},
-	{ "restart", 		quit		},
-	{ "killclient",		killclient	},
-	{ "togglefloatingwin", 	togglefloatingwin	},
-	{ "togglefloatingtag", 	togglefloatingtag	},
-	{ "decmwfact", 		setmwfact	},
-	{ "incmwfact", 		setmwfact	},
-	{ "incnmaster", 	incnmaster	},
-	{ "decnmaster", 	incnmaster	},
-	{ "iconify", 		iconify		},
-	{ "zoom", 		zoom		},
-	{ "moveright", 		moveresizekb	},
-	{ "moveleft", 		moveresizekb	},
-	{ "moveup", 		moveresizekb	},
-	{ "movedown", 		moveresizekb	},
-	{ "resizedecx", 	moveresizekb	},
-	{ "resizeincx", 	moveresizekb	},
-	{ "resizedecy", 	moveresizekb	},
-	{ "resizeincy", 	moveresizekb	},
-	{ "togglemonitor", 	togglemonitor	},
-	{ "togglefill", 	togglefill	},
+	{ "togglestruts",      togglestruts      },
+	{ "focusicon",         focusicon         },
+	{ "focusnext",         focusnext         },
+	{ "focusprev",         focusprev         },
+	{ "viewprevtag",       viewprevtag       },
+	{ "viewlefttag",       viewlefttag       },
+	{ "viewrighttag",      viewrighttag      },
+	{ "quit",              quit              },
+	{ "restart",           quit              },
+	{ "killclient",        killclient        },
+	{ "togglefloatingwin", togglefloatingwin },
+	{ "togglefloatingtag", togglefloatingtag },
+	{ "decmwfact",         setmwfact         },
+	{ "incmwfact",         setmwfact         },
+	{ "incnmaster",        incnmaster        },
+	{ "decnmaster",        incnmaster        },
+	{ "iconify",           iconify           },
+	{ "zoom",              zoom              },
+	{ "moveright",         moveresizekb      },
+	{ "moveleft",          moveresizekb      },
+	{ "moveup",            moveresizekb      },
+	{ "movedown",          moveresizekb      },
+	{ "resizedecx",        moveresizekb      },
+	{ "resizeincx",        moveresizekb      },
+	{ "resizedecy",        moveresizekb      },
+	{ "resizeincy",        moveresizekb      },
+	{ "togglemonitor",     togglemonitor     },
+	{ "togglefill",        togglefill        },
 };
 
 static KeyItem KeyItemsByTag[] = {
-	{ "view",		view		},
-	{ "toggleview",		toggleview	},
-	{ "focusview",		focusview	},
-	{ "tag", 		tag		},
-	{ "toggletag", 		toggletag	},
+	{ "view",       view       },
+	{ "toggleview", toggleview },
+	{ "focusview",  focusview  },
+	{ "tag",        tag        },
+	{ "toggletag",  toggletag  },
 };
 
 static void
@@ -137,7 +137,7 @@ initkeys() {
 
 	initmodkey();
 	keys = malloc(sizeof(Key *) * LENGTH(KeyItems));
-	/* global functions */
+	/* Global functions */
 	for (i = 0; i < LENGTH(KeyItems); i++) {
 		tmp = getresource(KeyItems[i].name, NULL);
 		if (!tmp)
@@ -148,7 +148,7 @@ initkeys() {
 		parsekey(tmp, keys[nkeys]);
 		nkeys++;
 	}
-	/* per tag functions */
+	/* Per tag functions */
 	for (j = 0; j < LENGTH(KeyItemsByTag); j++) {
 		for (i = 0; i < ntags; i++) {
 			snprintf(t, sizeof(t), "%s%d", KeyItemsByTag[j].name, i);
@@ -163,7 +163,7 @@ initkeys() {
 			nkeys++;
 		}
 	}
-	/* layout setting */
+	/* Layout setting */
 	for (i = 0; layouts[i].symbol != '\0'; i++) {
 		snprintf(t, sizeof(t), "setlayout%c", layouts[i].symbol);
 		tmp = getresource(t, NULL);
@@ -176,7 +176,7 @@ initkeys() {
 		parsekey(tmp, keys[nkeys]);
 		nkeys++;
 	}
-	/* spawn */
+	/* Spawn */
 	for (i = 0; i < 64; i++) {
 		snprintf(t, sizeof(t), "spawn%d", i);
 		tmp = getresource(t, NULL);

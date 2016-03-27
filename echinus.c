@@ -1952,7 +1952,6 @@ setup(char *conf) {
 	strncpy(options.command, getresource("command", COMMAND), LENGTH(options.command));
 	options.command[LENGTH(options.command) - 1] = '\0';
 	options.dectiled = atoi(getresource("decoratetiled", STR(DECORATETILED)));
-	options.scrolldown[LENGTH(options.scrolldown) - 1] = '\0';
 	options.hidebastards = atoi(getresource("hidebastards", "0"));
 	options.focus = atoi(getresource("sloppy", "0"));
 	options.gap = atoi(getresource("gap", STR(DEFGAP)));
@@ -2121,8 +2120,8 @@ spiral(Monitor * m) {
 void
 togglestruts(const char *arg) {
 	views[curmontag].barpos =
-	    (views[curmontag].barpos ==
-	    StrutsOn) ? (options.hidebastards ? StrutsHide : StrutsOff) : StrutsOn;
+		(views[curmontag].barpos ==
+		StrutsOn) ? (options.hidebastards ? StrutsHide : StrutsOff) : StrutsOn;
 	updategeom(curmonitor());
 	arrange(curmonitor());
 }
@@ -2149,11 +2148,10 @@ void
 togglefloatingtag(const char *arg) {
 	char *torf;
 
-	togglefloatingwin(arg);
-	if (FEATURES(curlayout, OVERLAP))
-		// XXX: Add deftilinglayout here
-		torf = "d";
-	else
+	if (FEATURES(curlayout, OVERLAP)) {
+		togglefloatingwin(arg);
+		torf = "s";
+	 } else
 		torf = "i";
 
 	setlayout(torf);
@@ -2175,7 +2173,7 @@ togglefill(const char *arg) {
 		return;
 	for (c = clients; c; c = c->next) {
 		if (isvisible(c, m) && (c != sel) && !c->isbastard
-			       	&& (c->isfloating || MFEATURES(m, OVERLAP))) {
+					&& (c->isfloating || MFEATURES(m, OVERLAP))) {
 			if (c->y + c->h > sel->y && c->y < sel->y + sel->h) {
 				if (c->x < sel->x)
 					x1 = max(x1, c->x + c->w + style.border);
@@ -2218,7 +2216,7 @@ togglemax(const char *arg) {
 	if (sel->ismax) {
 		save(sel);
 		resize(sel, m->sx - sel->border,
-		    m->sy - sel->border - sel->th, m->sw, m->sh + sel->th, False);
+			m->sy - sel->border - sel->th, m->sw, m->sh + sel->th, False);
 	} else {
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, True);
 	}
