@@ -1,5 +1,6 @@
 /* enums */
 
+/* Keep in sync with atomnames[][] in ewmh.c */
 enum { ClientList, ActiveWindow, WindowDesk,
 	NumberOfDesk, DeskNames, CurDesk, ELayout, WorkArea,
 	ClientListStacking, WindowOpacity, WindowType,
@@ -9,14 +10,13 @@ enum { ClientList, ActiveWindow, WindowDesk,
 	WindowStateHidden, WMCheck, CloseWindow,
 	Utf8String, Supported, WMProto, WMDelete, WMName, WMState, WMChangeState,
 	WMTakeFocus, MWMHints, NATOMS
-}; /* keep in sync with atomnames[][] in ewmh.c */
+};
 
-enum { LeftStrut, RightStrut, TopStrut, BotStrut, LastStrut }; /* ewmh struts */
-enum { ColFG, ColBG, ColBorder, ColButton, ColLast };	/* colors */
-enum { ClientWindow, ClientTitle, ClientFrame };	/* client parts */
-enum { Iconify, Maximize, Close, LastBtn }; /* window buttons */
+enum { LeftStrut, RightStrut, TopStrut, BotStrut, LastStrut }; /* EWMH struts */
+enum { ColFG, ColBG, ColBorder, ColButton, ColLast }; /* Colors */
+enum { ClientWindow, ClientTitle, ClientFrame }; /* Client parts */
+enum { Iconify, Maximize, Close, LastBtn }; /* Window buttons */
 
-/* typedefs */
 typedef struct Monitor Monitor;
 struct Monitor {
 	int sx, sy, sw, sh, wax, way, waw, wah;
@@ -32,11 +32,11 @@ typedef struct {
 	void (*arrange) (Monitor * m);
 	char symbol;
 	int features;
-#define BIT(_i)	(1 << (_i))
-#define MWFACT	BIT(0)
-#define NMASTER	BIT(1)
-#define	ZOOM	BIT(2)
-#define	OVERLAP	BIT(3)
+	#define BIT(_i) (1 << (_i))
+	#define MWFACT  BIT(0)
+	#define NMASTER BIT(1)
+	#define ZOOM    BIT(2)
+	#define OVERLAP BIT(3)
 } Layout;
 
 #define FEATURES(_layout, _which) (!(!((_layout)->features & (_which))))
@@ -47,8 +47,8 @@ typedef struct Client Client;
 struct Client {
 	char name[256];
 	int x, y, w, h;
-	int rx, ry, rw, rh;	/* revert geometry */
-	int th;			/* title height */
+	int rx, ry, rw, rh; /* Revert geometry */
+	int th; /* Title height */
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int minax, maxax, minay, maxay;
 	int ignoreunmap;
@@ -68,13 +68,15 @@ struct Client {
 	XftDraw *xftdraw;
 };
 
+/* Per-tag settings */
 typedef struct View {
 	int barpos;
 	int nmaster;
 	double mwfact;
 	Layout *layout;
-} View; /* per-tag settings */
+} View;
 
+ /* Window buttons */
 typedef struct {
 	Pixmap pm;
 	int px, py;
@@ -82,7 +84,7 @@ typedef struct {
 	int x;
 	int pressed;
 	void (*action) (const char *arg);
-} Button; /* window buttons */
+} Button;
 
 typedef struct {
 	unsigned int border;
@@ -98,13 +100,15 @@ typedef struct {
 	XftFont *font;
 } Style;
 
+/* Keyboard shortcuts */
 typedef struct {
 	unsigned long mod;
 	KeySym keysym;
 	void (*func) (const char *arg);
 	const char *arg;
-} Key; /* keyboard shortcuts */
+} Key;
 
+/* Window matching rules */
 typedef struct {
 	char *prop;
 	char *tags;
@@ -112,7 +116,7 @@ typedef struct {
 	Bool hastitle;
 	regex_t *propregex;
 	regex_t *tagregex;
-} Rule; /* window matching rules */
+} Rule;
 
 /* ewmh.c */
 Bool checkatom(Window win, Atom bigatom, Atom smallatom);
@@ -125,7 +129,7 @@ void setopacity(Client * c, unsigned int opacity);
 extern void (*updateatom[]) (void *);
 int getstruts(Client * c);
 
-/* main */
+/* Main */
 void arrange(Monitor * m);
 Monitor *clientmonitor(Client * c);
 Monitor *curmonitor();
@@ -174,7 +178,7 @@ void drawclient(Client * c);
 void deinitstyle();
 void initstyle();
 
-/* XXX: this block of defines must die */
+/* XXX: This block of defines must die */
 #define curseltags curmonitor()->seltags
 #define curprevtags curmonitor()->prevtags
 #define cursx curmonitor()->sx
@@ -189,26 +193,26 @@ void initstyle();
 #define curstruts curmonitor()->struts
 #define curlayout views[curmontag].layout
 
-#define LENGTH(x)		(sizeof(x) / sizeof x[0])
+#define LENGTH(x)                (sizeof(x) / sizeof x[0])
 #ifdef DEBUG
-#define DPRINT			fprintf(stderr, "%s: %s() %d\n",__FILE__,__func__, __LINE__);
-#define DPRINTF(format, ...)	fprintf(stderr, "%s %s():%d " format, __FILE__, __func__, __LINE__, __VA_ARGS__)
+	#define DPRINT               fprintf(stderr, "%s: %s() %d\n",__FILE__,__func__, __LINE__);
+	#define DPRINTF(format, ...) fprintf(stderr, "%s %s():%d " format, __FILE__, __func__, __LINE__, __VA_ARGS__)
 #else
-#define DPRINT			;
-#define DPRINTF(format, ...)
+	#define DPRINT ;
+	#define DPRINTF(format, ...)
 #endif
 #define DPRINTCLIENT(c) DPRINTF("%s: x: %d y: %d w: %d h: %d th: %d f: %d b: %d m: %d\n", \
-				    c->name, c->x, c->y, c->w, c->h, c->th, c->isfloating, c->isbastard, c->ismax)
+                        c->name, c->x, c->y, c->w, c->h, c->th, c->isfloating, c->isbastard, c->ismax)
 
-#define OPAQUE			0xffffffff
-#define RESNAME		       "echinus"
-#define RESCLASS	       "Echinus"
-#define STR(_s)			TOSTR(_s)
-#define TOSTR(_s)		#_s
-#define min(_a, _b)		((_a) < (_b) ? (_a) : (_b))
-#define max(_a, _b)		((_a) > (_b) ? (_a) : (_b))
+#define OPAQUE      0xffffffff
+#define RESNAME     "echinus"
+#define RESCLASS    "Echinus"
+#define STR(_s)     TOSTR(_s)
+#define TOSTR(_s)   #_s
+#define min(_a, _b) ((_a) < (_b) ? (_a) : (_b))
+#define max(_a, _b) ((_a) > (_b) ? (_a) : (_b))
 
-/* globals */
+/* Globals */
 extern Atom atom[NATOMS];
 extern Display *dpy;
 extern Window root;

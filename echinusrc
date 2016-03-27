@@ -2,11 +2,11 @@
 
 Echinus*attachaside: 0
 Echinus*deflayout: i
-Echinus*tilinglayout: d
-Echinus*gap: 32
-Echinus*margin: 128
+Echinus*deftilinglayout: s
+Echinus*gap: 40
+Echinus*margin: 121
 Echinus*modkey: W
-Echinus*mwfact: 0.62
+Echinus*mwfact: 0.618
 Echinus*nmaster: 1
 Echinus*sloppy: 2
 
@@ -57,9 +57,9 @@ Echinus*incmwfact: W + Right = +0.05
 
 Echinus*opacity: 1
 Echinus*attachaside: 1
-Echinus*command: urxvtc
-Echinus*scrolldown: xdesktop -p
-Echinus*scrollup: xdesktop -n
+Echinus*rootrightlcick: mygtkmenu $HOME/.mygtkmenu
+Echinus*rootscrolldown: xdesktop -p
+Echinus*rootscrollup: xdesktop -n
 
 
 ## TAGS SETTINGS

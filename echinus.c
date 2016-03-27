@@ -54,12 +54,12 @@
 #endif
 #include "echinus.h"
 
-#define BUTTONMASK              (ButtonPressMask | ButtonReleaseMask)
-#define CLEANMASK(mask)         (mask & ~(numlockmask | LockMask))
-#define MOUSEMASK               (BUTTONMASK | PointerMotionMask)
-#define CLIENTMASK              (PropertyChangeMask | StructureNotifyMask | FocusChangeMask)
-#define CLIENTNOPROPAGATEMASK   (BUTTONMASK | ButtonMotionMask)
-#define FRAMEMASK               (MOUSEMASK | SubstructureRedirectMask | SubstructureNotifyMask | EnterWindowMask | LeaveWindowMask)
+#define BUTTONMASK            (ButtonPressMask | ButtonReleaseMask)
+#define CLEANMASK(mask)       (mask & ~(numlockmask | LockMask))
+#define MOUSEMASK             (BUTTONMASK | PointerMotionMask)
+#define CLIENTMASK            (PropertyChangeMask | StructureNotifyMask | FocusChangeMask)
+#define CLIENTNOPROPAGATEMASK (BUTTONMASK | ButtonMotionMask)
+#define FRAMEMASK             (MOUSEMASK | SubstructureRedirectMask | SubstructureNotifyMask | EnterWindowMask | LeaveWindowMask)
 
 enum { StrutsOn, StrutsOff, StrutsHide };
 enum { CurNormal, CurResize, CurMove, CurLast };
@@ -197,9 +197,9 @@ struct {
 	int gap;
 	int margin;
 	int snap;
-	char command[255];
-	char scrolldown[255];
-	char scrollup[255];
+	char rootrightclick[255];
+	char rootscrolldown[255];
+	char rootscrollup[255];
 } options;
 
 Layout layouts[] = {
@@ -397,18 +397,19 @@ buttonpress(XEvent * e) {
 
 	if (!curmonitor())
 		return;
+
 	if (ev->window == root) {
 		if (ev->type != ButtonRelease)
 			return;
 		switch (ev->button) {
 		case Button3:
-			spawn(options.command);
+			spawn(options.rootrightclick);
 			break;
 		case Button4:
-			spawn(options.scrolldown);
+			spawn(options.rootscrolldown);
 			break;
 		case Button5:
-			spawn(options.scrollup);
+			spawn(options.rootscrollup);
 			break;
 		}
 		return;
@@ -815,6 +816,7 @@ focusprev(const char *arg) {
 
 	if (!sel)
 		return;
+
 	for (c = sel->prev;
 	    c && (c->isbastard || c->isicon || !isvisible(c, curmonitor())); c = c->prev);
 	if (!c) {
@@ -832,8 +834,10 @@ focusprev(const char *arg) {
 void
 iconify(const char *arg) {
 	Client *c;
+
 	if (!sel)
 		return;
+
 	c = sel;
 	focusnext(NULL);
 	ban(c);
@@ -847,6 +851,7 @@ incnmaster(const char *arg) {
 
 	if (!FEATURES(curlayout, NMASTER))
 		return;
+
 	if (!arg) {
 		views[curmontag].nmaster = DEFNMASTER;
 	} else {
@@ -864,9 +869,9 @@ Client *
 getclient(Window w, Client * list, int part) {
 	Client *c;
 
-#define ClientPart(_c, _part) (((_part) == ClientWindow) ? (_c)->win : \
-					((_part) == ClientTitle) ? (_c)->title : \
-					((_part) == ClientFrame) ? (_c)->frame : 0)
+	#define ClientPart(_c, _part) (((_part) == ClientWindow) ? (_c)->win : \
+                       ((_part) == ClientTitle) ? (_c)->title : \
+                       ((_part) == ClientFrame) ? (_c)->frame : 0)
 
 	for (c = list; c && (ClientPart(c, part)) != w; c = c->next);
 
@@ -880,9 +885,11 @@ getstate(Window w) {
 	unsigned long n;
 
 	p = (long*)getatom(w, atom[WMState], &n);
+
 	if (n != 0)
 		ret = *p;
 	XFree(p);
+
 	return ret;
 }
 
@@ -958,12 +965,13 @@ grabkeys(void) {
 	unsigned int modifiers[] = { 0, LockMask, numlockmask, numlockmask|LockMask };
 	unsigned int i, j;
 	KeyCode code;
+
 	XUngrabKey(dpy, AnyKey, AnyModifier, root);
 	for (i = 0; i < nkeys; i++) {
 		if ((code = XKeysymToKeycode(dpy, keys[i]->keysym))) {
 			for (j = 0; j < LENGTH(modifiers); j++)
 				XGrabKey(dpy, code, keys[i]->mod | modifiers[j], root,
-					 True, GrabModeAsync, GrabModeAsync);
+                         True, GrabModeAsync, GrabModeAsync);
 		}
     }
 }
@@ -976,11 +984,13 @@ keypress(XEvent * e) {
 
 	if (!curmonitor())
 		return;
+
 	ev = &e->xkey;
 	keysym = XkbKeycodeToKeysym(dpy, (KeyCode) ev->keycode, 0, 0);
+
 	for (i = 0; i < nkeys; i++)
 		if (keysym == keys[i]->keysym
-		    && CLEANMASK(keys[i]->mod) == CLEANMASK(ev->state)) {
+            && CLEANMASK(keys[i]->mod) == CLEANMASK(ev->state)) {
 			if (keys[i]->func)
 				keys[i]->func(keys[i]->arg);
 			XUngrabKeyboard(dpy, CurrentTime);
@@ -993,6 +1003,7 @@ killclient(const char *arg) {
 
 	if (!sel)
 		return;
+
 	if (checkatom(sel->win, atom[WMProto], atom[WMDelete])) {
 		ev.type = ClientMessage;
 		ev.xclient.window = sel->win;
@@ -1001,9 +1012,8 @@ killclient(const char *arg) {
 		ev.xclient.data.l[0] = atom[WMDelete];
 		ev.xclient.data.l[1] = CurrentTime;
 		XSendEvent(dpy, sel->win, False, NoEventMask, &ev);
-	} else {
+	} else
 		XKillClient(dpy, sel->win);
-	}
 }
 
 void
@@ -1630,6 +1640,7 @@ scan(void) {
 	XWindowAttributes wa;
 
 	wins = NULL;
+
 	if (XQueryTree(dpy, root, &d1, &d2, &wins, &num)) {
 		for (i = 0; i < num; i++) {
 			if (!XGetWindowAttributes(dpy, wins[i], &wa) ||
@@ -1951,18 +1962,18 @@ setup(char *conf) {
 	/* Init appearance */
 	initstyle();
 	options.attachaside = atoi(getresource("attachaside", "1"));
-	strncpy(options.command, getresource("command", COMMAND), LENGTH(options.command));
-	options.command[LENGTH(options.command) - 1] = '\0';
+	strncpy(options.rootrightclick, getresource("rootrightclick", ROOTRIGHTCLICK), LENGTH(options.rootrightclick));
+	options.rootrightclick[LENGTH(options.rootrightclick) - 1] = '\0';
 	options.dectiled = atoi(getresource("decoratetiled", STR(DECORATETILED)));
 	options.deftilinglayout = getresource("deftilinglayout", "s");
 	options.hidebastards = atoi(getresource("hidebastards", "0"));
 	options.focus = atoi(getresource("sloppy", "0"));
 	options.gap = atoi(getresource("gap", STR(DEFGAP)));
 	options.margin = atoi(getresource("margin", STR(DEFMARGIN)));
-	strncpy(options.scrolldown, getresource("scrolldown", SCROLLDOWN), LENGTH(options.scrolldown));
-	options.scrolldown[LENGTH(options.scrolldown) - 1] = '\0';
-	strncpy(options.scrollup, getresource("scrollup", SCROLLUP), LENGTH(options.scrollup));
-	options.scrollup[LENGTH(options.scrollup) - 1] = '\0';
+	strncpy(options.rootscrolldown, getresource("rootscrolldown", ROOTSCROLLDOWN), LENGTH(options.rootscrolldown));
+	options.rootscrolldown[LENGTH(options.rootscrolldown) - 1] = '\0';
+	strncpy(options.rootscrollup, getresource("rootscrollup", ROOTSCROLLUP), LENGTH(options.rootscrollup));
+	options.rootscrollup[LENGTH(options.rootscrollup) - 1] = '\0';
 	options.snap = atoi(getresource("snap", STR(SNAP)));
 
 	for (m = monitors; m; m = m->next) {
@@ -2428,8 +2439,9 @@ updateframe(Client * c) {
 		if (c->tags[i])
 			f += FEATURES(views[i].layout, OVERLAP);
 	}
-	c->th = !c->ismax && (c->isfloating || options.dectiled || f) ?
-				style.titleheight : 0;
+	//onodera
+	//c->th = !c->ismax && (c->isfloating || options.dectiled || f) ?
+//				style.titleheight : 0;
 	if (!c->th)
 		XUnmapWindow(dpy, c->title);
 	else

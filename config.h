@@ -16,9 +16,9 @@
 #define MINWIDTH        12
 #define MINHEIGHT       12
 #define TITLEHEIGHT     30
-#define COMMAND         "xterm"
-#define SCROLLDOWN      ""
-#define SCROLLUP        ""
+#define ROOTRIGHTCLICK  "xterm"
+#define ROOTSCROLLDOWN  ""
+#define ROOTSCROLLUP    ""
 #define DEFMWFACT       0.6
 #define DEFNMASTER      1
 #define SNAP            5
