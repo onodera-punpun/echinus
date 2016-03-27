@@ -1371,7 +1371,6 @@ mouseresize(Client * c) {
 			handler[ev.type] (&ev);
 			break;
 		case MotionNotify:
-			//XSync(dpy, False);
 			if ((nw = ev.xmotion.x - ocx - 2 * c->border + 1) <= 0)
 				nw = MINWIDTH;
 			if ((nh = ev.xmotion.y - ocy - 2 * c->border + 1) <= 0)
@@ -2145,16 +2144,15 @@ togglefloatingwin(const char *arg) {
 	if (!sel)
 		return;
 
-	if (FEATURES(curlayout, OVERLAP))
-		return;
-
 	sel->isfloating = !sel->isfloating;
 	updateframe(sel);
+
 	if (sel->isfloating) {
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, False);
 	} else {
 		save(sel);
 	}
+
 	arrange(curmonitor());
 }
 
@@ -2163,7 +2161,6 @@ togglefloatingtag(const char *arg) {
 	const char *torf;
 
 	if (FEATURES(curlayout, OVERLAP)) {
-		togglefloatingwin(arg);
 		torf = options.deftilinglayout;
 	 } else
 		torf = "i";
@@ -2223,18 +2220,19 @@ togglemax(const char *arg) {
 	XEvent ev;
 	Monitor *m = curmonitor();
 
-	if (!sel || sel->isfixed || !sel->isfloating || MFEATURES(m, OVERLAP))
+	// TODO: mpv wont fullscreen because it's not selected yet
+	if (!sel)
 		return;
+
 	sel->ismax = !sel->ismax;
 	updateframe(sel);
+
 	if (sel->ismax) {
 		save(sel);
-		resize(sel, m->sx - sel->border,
-			m->sy - sel->border - sel->th, m->sw, m->sh + sel->th, False);
+		resize(sel, m->sx - sel->border, m->sy - sel->border - sel->th, m->sw, m->sh + sel->th, False);
 	} else {
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, True);
 	}
-	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
 }
 
 void
