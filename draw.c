@@ -2,6 +2,7 @@
  *  echinus wm written by Alexander Polakov <polachok@gmail.com>
  *  this file contains code related to drawing
  */
+
 #include <regex.h>
 #include <ctype.h>
 #include <assert.h>
