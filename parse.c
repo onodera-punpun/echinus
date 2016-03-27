@@ -2,6 +2,7 @@
  *  echinus wm written by Alexander Polakov <polachok@gmail.com>
  *  this file contains code to parse rules and keybindings
  */
+
 #include <regex.h>
 #include <ctype.h>
 #include <X11/Xatom.h>

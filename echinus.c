@@ -191,6 +191,7 @@ unsigned int numlockmask;
 struct {
 	Bool attachaside;
 	Bool dectiled;
+	const char *deftilinglayout;
 	Bool hidebastards;
 	int focus;
 	int gap;
@@ -1875,6 +1876,7 @@ setup(char *conf) {
 	XSetWindowAttributes wa;
 	char oldcwd[256], path[256] = "/";
 	char *home, *slash;
+
 	/* Configuration files to open (%s gets converted to $HOME) */
 	const char *confs[] = {
 		conf,
@@ -1952,6 +1954,7 @@ setup(char *conf) {
 	strncpy(options.command, getresource("command", COMMAND), LENGTH(options.command));
 	options.command[LENGTH(options.command) - 1] = '\0';
 	options.dectiled = atoi(getresource("decoratetiled", STR(DECORATETILED)));
+	options.deftilinglayout = getresource("deftilinglayout", "s");
 	options.hidebastards = atoi(getresource("hidebastards", "0"));
 	options.focus = atoi(getresource("sloppy", "0"));
 	options.gap = atoi(getresource("gap", STR(DEFGAP)));
@@ -2146,11 +2149,11 @@ togglefloatingwin(const char *arg) {
 
 void
 togglefloatingtag(const char *arg) {
-	char *torf;
+	const char *torf;
 
 	if (FEATURES(curlayout, OVERLAP)) {
 		togglefloatingwin(arg);
-		torf = "s";
+		torf = options.deftilinglayout;
 	 } else
 		torf = "i";
 
