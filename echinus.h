@@ -155,7 +155,7 @@ int getstruts(Client * c);
 /* Main */
 void arrange(Monitor * m);
 Monitor *clientmonitor(Client * c);
-Monitor *curmonitor();
+Monitor *selmon();
 void *emallocz(unsigned int size);
 void eprint(const char *errstr, ...);
 const char *getresource(const char *resource, const char *defval);
@@ -202,18 +202,18 @@ void deinitstyle();
 void initstyle();
 
 /* XXX: This block of defines must die */
-#define curseltags curmonitor()->seltags
-#define curprevtags curmonitor()->prevtags
-#define cursx curmonitor()->sx
-#define cursy curmonitor()->sy
-#define cursh curmonitor()->sh
-#define cursw curmonitor()->sw
-#define curwax curmonitor()->wax
-#define curway curmonitor()->way
-#define curwaw curmonitor()->waw
-#define curwah curmonitor()->wah
-#define curmontag curmonitor()->curtag
-#define curstruts curmonitor()->struts
+#define curseltags selmon()->seltags
+#define curprevtags selmon()->prevtags
+#define cursx selmon()->sx
+#define cursy selmon()->sy
+#define cursh selmon()->sh
+#define cursw selmon()->sw
+#define curwax selmon()->wax
+#define curway selmon()->way
+#define curwaw selmon()->waw
+#define curwah selmon()->wah
+#define curmontag selmon()->curtag
+#define curstruts selmon()->struts
 #define curlayout views[curmontag].layout
 
 #define LENGTH(x)                (sizeof(x) / sizeof x[0])

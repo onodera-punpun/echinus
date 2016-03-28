@@ -92,7 +92,7 @@ long getstate(Window w);
 Bool gettextprop(Window w, Atom atom, char *text, unsigned int size);
 void getpointer(int *x, int *y);
 Monitor *getmonitor(int x, int y);
-Monitor *curmonitor();
+Monitor *selmon();
 Monitor *clientmonitor(Client * c);
 int idxoftag(const char *tag);
 Bool isvisible(Client * c, Monitor * m);
@@ -333,8 +333,7 @@ void arrange(Monitor *m) {
 		arrangemon(m);
 }
 
-void
-attach(Client * c, Bool attachaside) {
+void attach(Client *c, Bool attachaside) {
 	if (attachaside) {
 		if (clients) {
 			Client * lastClient = clients;
@@ -342,11 +341,9 @@ attach(Client * c, Bool attachaside) {
 				lastClient = lastClient->next;
 			c->prev = lastClient;
 			lastClient->next = c;
-		}
-		else
+		} else
 			clients = c;
-	}
-	else {
+	} else {
 		if (clients)
 			clients->prev = c;
 		c->next = clients;
@@ -354,16 +351,15 @@ attach(Client * c, Bool attachaside) {
 	}
 }
 
-void
-attachstack(Client * c) {
+void attachstack(Client *c) {
 	c->snext = stack;
 	stack = c;
 }
 
-void
-ban(Client * c) {
+void ban(Client *c) {
 	if (c->isbanned)
 		return;
+
 	c->ignoreunmap++;
 	setclientstate(c, IconicState);
 	XSelectInput(dpy, c->win, CLIENTMASK & ~(StructureNotifyMask | EnterWindowMask));
@@ -372,32 +368,34 @@ ban(Client * c) {
 	XUnmapWindow(dpy, c->win);
 	XSelectInput(dpy, c->win, CLIENTMASK);
 	XSelectInput(dpy, c->frame, FRAMEMASK);
+
 	c->isbanned = True;
 }
 
-void
-buttonpress(XEvent * e) {
+void buttonpress(XEvent *e) {
 	Client *c;
 	int i;
 	XButtonPressedEvent *ev = &e->xbutton;
 
-	if (!curmonitor())
+	if (!selmon())
 		return;
 
 	if (ev->window == root) {
 		if (ev->type != ButtonRelease)
 			return;
+
 		switch (ev->button) {
-		case Button3:
-			spawn(options.rootrightclick);
-			break;
-		case Button4:
-			spawn(options.rootscrolldown);
-			break;
-		case Button5:
-			spawn(options.rootscrollup);
-			break;
+			case Button3:
+				spawn(options.rootrightclick);
+				break;
+			case Button4:
+				spawn(options.rootscrolldown);
+				break;
+			case Button5:
+				spawn(options.rootscrollup);
+				break;
 		}
+
 		return;
 	}
 
@@ -428,7 +426,7 @@ buttonpress(XEvent * e) {
 		drawclient(c);
 		if (ev->type == ButtonRelease)
 			return;
-		restack(curmonitor());
+		restack(selmon());
 		if (ev->button == Button1)
 			mousemove(c);
 		else if (ev->button == Button3)
@@ -436,7 +434,7 @@ buttonpress(XEvent * e) {
 	} else if ((c = getclient(ev->window, clients, ClientWindow))) {
 		DPRINTF("WINDOW %s: 0x%x\n", c->name, (int) ev->window);
 		focus(c);
-		restack(curmonitor());
+		restack(selmon());
 		if (CLEANMASK(ev->state) != modkey) {
 			XAllowEvents(dpy, ReplayPointer, CurrentTime);
 			return;
@@ -644,13 +642,13 @@ enternotify(XEvent * e) {
 
 	if (ev->mode != NotifyNormal || ev->detail == NotifyInferior)
 		return;
-	if (!curmonitor())
+	if (!selmon())
 		return;
 	if ((c = getclient(ev->window, clients, ClientFrame))) {
 		if (c->isbastard)
 			return;
 		/* Focus when switching monitors */
-		if (!isvisible(sel, curmonitor()))
+		if (!isvisible(sel, selmon()))
 			focus(c);
 		switch (options.focus) {
 		case Clk2Focus:
@@ -664,7 +662,7 @@ enternotify(XEvent * e) {
 			break;
 		case SloppyRaise:
 			focus(c);
-			restack(curmonitor());
+			restack(selmon());
 			break;
 		}
 	} else if (ev->window == root) {
@@ -728,9 +726,9 @@ focus(Client * c) {
 	Client *o;
 
 	o = sel;
-	if ((!c && selscreen) || (c && (c->isbastard || !isvisible(c, curmonitor()))))
+	if ((!c && selscreen) || (c && (c->isbastard || !isvisible(c, selmon()))))
 		for (c = stack;
-		    c && (c->isbastard || c->isicon || !isvisible(c, curmonitor())); c = c->snext);
+		    c && (c->isbastard || c->isicon || !isvisible(c, selmon())); c = c->snext);
 	if (sel && sel != c) {
 		XSetWindowBorder(dpy, sel->frame, style.color.norm[ColBorder]);
 	}
@@ -764,12 +762,12 @@ void
 focusicon(const char *arg) {
 	Client *c;
 
-	for (c = clients; c && (!c->isicon || !isvisible(c, curmonitor())); c = c->next);
+	for (c = clients; c && (!c->isicon || !isvisible(c, selmon())); c = c->next);
 	if (!c)
 		return;
 	c->isicon = False;
 	focus(c);
-	arrange(curmonitor());
+	arrange(selmon());
 }
 
 void
@@ -779,14 +777,14 @@ focusnext(const char *arg) {
 	if (!sel)
 		return;
 	for (c = sel->next;
-	    c && (c->isbastard || c->isicon || !isvisible(c, curmonitor())); c = c->next);
+	    c && (c->isbastard || c->isicon || !isvisible(c, selmon())); c = c->next);
 	if (!c)
 		for (c = clients;
 		    c && (c->isbastard || c->isicon
-			|| !isvisible(c, curmonitor())); c = c->next);
+			|| !isvisible(c, selmon())); c = c->next);
 	if (c) {
 		focus(c);
-		restack(curmonitor());
+		restack(selmon());
 	}
 }
 
@@ -798,16 +796,16 @@ focusprev(const char *arg) {
 		return;
 
 	for (c = sel->prev;
-	    c && (c->isbastard || c->isicon || !isvisible(c, curmonitor())); c = c->prev);
+	    c && (c->isbastard || c->isicon || !isvisible(c, selmon())); c = c->prev);
 	if (!c) {
 		for (c = clients; c && c->next; c = c->next);
 		for (;
 		    c && (c->isbastard || c->isicon
-			|| !isvisible(c, curmonitor())); c = c->prev);
+			|| !isvisible(c, selmon())); c = c->prev);
 	}
 	if (c) {
 		focus(c);
-		restack(curmonitor());
+		restack(selmon());
 	}
 }
 
@@ -822,7 +820,7 @@ iconify(const char *arg) {
 	focusnext(NULL);
 	ban(c);
 	c->isicon = True;
-	arrange(curmonitor());
+	arrange(selmon());
 }
 
 void
@@ -842,7 +840,7 @@ incnmaster(const char *arg) {
 		views[curmontag].nmaster += i;
 	}
 	if (sel)
-		arrange(curmonitor());
+		arrange(selmon());
 }
 
 Client *
@@ -962,7 +960,7 @@ keypress(XEvent * e) {
 	KeySym keysym;
 	XKeyEvent *ev;
 
-	if (!curmonitor())
+	if (!selmon())
 		return;
 
 	ev = &e->xkey;
@@ -1029,7 +1027,7 @@ manage(Window w, XWindowAttributes * wa) {
 		c->isfixed = True;
 	}
 
-	cm = curmonitor();
+	cm = selmon();
 	c->isicon = False;
 	c->title = c->isbastard ? (Window) NULL : 1;
 	c->tags = emallocz(ntags * sizeof(cm->seltags[0]));
@@ -1074,7 +1072,7 @@ manage(Window w, XWindowAttributes * wa) {
 	if (!cm) {
 		DPRINTF("Cannot find monitor for window 0x%x,"
 				"requested coordinates %d,%d\n", w, wa->x, wa->y);
-		cm = curmonitor();
+		cm = selmon();
 	}
 	c->hasstruts = getstruts(c); 
 	if (c->isbastard) {
@@ -1252,7 +1250,7 @@ clientmonitor(Client * c) {
 }
 
 Monitor *
-curmonitor() {
+selmon() {
 	int x, y;
 	getpointer(&x, &y);
 	return getmonitor(x, y);
@@ -1267,7 +1265,7 @@ mousemove(Client * c) {
 
 	if (c->isbastard)
 		return;
-	m = curmonitor();
+	m = selmon();
 	ocx = c->x;
 	ocy = c->y;
 	if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync,
@@ -1288,7 +1286,7 @@ mousemove(Client * c) {
 			break;
 		case MotionNotify:
 			/* We are probably moving to a different monitor */
-			if (!(nm = curmonitor()))
+			if (!(nm = selmon()))
 				break;
 			nx = ocx + (ev.xmotion.x_root - x1);
 			ny = ocy + (ev.xmotion.y_root - y1);
@@ -1325,7 +1323,7 @@ mouseresize(Client * c) {
 
 	if (c->isbastard || c->isfixed)
 		return;
-	cm = curmonitor();
+	cm = selmon();
 
 	ocx = c->x;
 	ocy = c->y;
@@ -1680,14 +1678,14 @@ setlayout(const char *arg) {
 	}
 	if (sel) {
 		for (c = clients; c; c = c->next) {
-			if (isvisible(c, curmonitor())) {
+			if (isvisible(c, selmon())) {
 				if (wasfloat)
 					save(c);
 				if (wasfloat != FEATURES(curlayout, OVERLAP))
 					updateframe(c);
 			}
 		}
-		arrange(curmonitor());
+		arrange(selmon());
 	}
 	updateatom[ELayout] (NULL);
 }
@@ -1711,7 +1709,7 @@ setmwfact(const char *arg) {
 		else if (views[curmontag].mwfact > 0.9)
 			views[curmontag].mwfact = 0.9;
 	}
-	arrange(curmonitor());
+	arrange(selmon());
 }
 
 void
@@ -2045,8 +2043,8 @@ togglestruts(const char *arg) {
 	views[curmontag].barpos =
 		(views[curmontag].barpos ==
 		StrutsOn) ? (options.hidebastards ? StrutsHide : StrutsOff) : StrutsOn;
-	updategeom(curmonitor());
-	arrange(curmonitor());
+	updategeom(selmon());
+	arrange(selmon());
 }
 
 void
@@ -2063,7 +2061,7 @@ togglefloatingwin(const char *arg) {
 		save(sel);
 	}
 
-	arrange(curmonitor());
+	arrange(selmon());
 }
 
 void
@@ -2081,7 +2079,7 @@ togglefloatingtag(const char *arg) {
 void
 togglefill(const char *arg) {
 	XEvent ev;
-	Monitor *m = curmonitor();
+	Monitor *m = selmon();
 	Client *c;
 	int x1, x2, y1, y2, w, h;
 
@@ -2128,7 +2126,7 @@ togglefill(const char *arg) {
 void
 togglemax(const char *arg) {
 	XEvent ev;
-	Monitor *m = curmonitor();
+	Monitor *m = selmon();
 
 	if (!sel)
 		return;
@@ -2182,7 +2180,7 @@ toggleview(const char *arg) {
 	Monitor *m, *cm;
 
 	i = idxoftag(arg);
-	cm = curmonitor();
+	cm = selmon();
 
 	memcpy(cm->prevtags, cm->seltags, ntags * sizeof(cm->seltags[0]));
 	cm->seltags[i] = !cm->seltags[i];
@@ -2221,7 +2219,7 @@ focusview(const char *arg) {
 			break;
 		}
 	}
-	restack(curmonitor());
+	restack(selmon());
 }
 
 void
@@ -2446,7 +2444,7 @@ view(const char *arg) {
 	int prevtag;
 
 	i = idxoftag(arg);
-	cm = curmonitor();
+	cm = selmon();
 
 	if (cm->seltags[i])
 		return;
@@ -2488,7 +2486,7 @@ viewprevtag(const char *arg) {
 	memcpy(curseltags, curprevtags, ntags * sizeof(curseltags[0]));
 	memcpy(curprevtags, tmptags, ntags * sizeof(curseltags[0]));
 	if (views[prevcurtag].barpos != views[curmontag].barpos)
-		updategeom(curmonitor());
+		updategeom(selmon());
 	arrange(NULL);
 	focus(NULL);
 	updateatom[CurDesk] (NULL);
@@ -2524,12 +2522,12 @@ zoom(const char *arg) {
 
 	if (!sel || !FEATURES(curlayout, ZOOM) || sel->isfloating)
 		return;
-	if ((c = sel) == nexttiled(clients, curmonitor()))
-		if (!(c = nexttiled(c->next, curmonitor())))
+	if ((c = sel) == nexttiled(clients, selmon()))
+		if (!(c = nexttiled(c->next, selmon())))
 			return;
 	detach(c);
 	attach(c, 0);
-	arrange(curmonitor());
+	arrange(selmon());
 	focus(c);
 }
 
