@@ -40,7 +40,6 @@
 #include <signal.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
-//#include <X11/XF86keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
@@ -61,9 +60,9 @@ enum { StrutsOn, StrutsOff, StrutsHide };
 enum { CurNormal, CurResize, CurMove, CurLast };
 enum { Clk2Focus, SloppyFloat, AllSloppy, SloppyRaise };
 
-void applyatoms(Client * c);
-void applyrules(Client * c);
-void arrange(Monitor * m);
+void applyatoms(Client *c);
+void applyrules(Client *c);
+void arrange(Monitor *m);
 void attach(Client * c, Bool attachaside);
 void attachstack(Client * c);
 void ban(Client * c);
@@ -97,7 +96,7 @@ Monitor *curmonitor();
 Monitor *clientmonitor(Client * c);
 int idxoftag(const char *tag);
 Bool isvisible(Client * c, Monitor * m);
-void initmonitors(XEvent * e);
+void initmons(XEvent * e);
 void keypress(XEvent * e);
 void killclient(const char *arg);
 void leavenotify(XEvent * e);
@@ -165,7 +164,7 @@ XrmDatabase xrdb;
 Bool otherwm;
 Bool running = True;
 Bool selscreen = True;
-Monitor *monitors;
+Monitor *mons;
 Client *clients;
 Client *sel;
 Client *stack;
@@ -227,8 +226,7 @@ void (*handler[LASTEvent]) (XEvent *) = {
 	[ClientMessage]    = clientmessage,
 };
 
-void
-applyatoms(Client * c) {
+void applyatoms(Client *c) {
 	unsigned int *t;
 	unsigned long n;
 	int i;
@@ -243,8 +241,7 @@ applyatoms(Client * c) {
 	}
 }
 
-void
-applyrules(Client * c) {
+void applyrules(Client *c) {
 	static char buf[512];
 	unsigned int i, j;
 	regmatch_t tmp;
@@ -253,11 +250,11 @@ applyrules(Client * c) {
 
 	/* Rule matching */
 	XGetClassHint(dpy, c->win, &ch);
-	snprintf(buf, sizeof(buf), "%s:%s:%s",
-	    ch.res_class ? ch.res_class : "", ch.res_name ? ch.res_name : "", c->name);
+	snprintf(buf, sizeof(buf), "%s:%s:%s", ch.res_class ? ch.res_class : "",
+	ch.res_name ? ch.res_name : "", c->name);
 	buf[LENGTH(buf)-1] = 0;
 
-	for (i = 0; i < nrules; i++)
+	for (i = 0; i < nrules; i++) {
 		if (rules[i]->propregex && !regexec(rules[i]->propregex, buf, 1, &tmp, 0)) {
 			c->isfloating = rules[i]->isfloating;
 			c->title = rules[i]->hastitle;
@@ -268,6 +265,7 @@ applyrules(Client * c) {
 				}
 			}
 		}
+	}
 
 	if (ch.res_class)
 		XFree(ch.res_class);
@@ -277,19 +275,18 @@ applyrules(Client * c) {
 		memcpy(c->tags, curseltags, ntags * sizeof(curseltags[0]));
 }
 
-void
-arrangefloats(Monitor * m) {
+void arrangefloats(Monitor *m) {
 	Client *c;
 	Monitor *om;
 	int dx, dy;
 
 	for (c = stack; c; c = c->snext) {
-		if (isvisible(c, m) && !c->isbastard &&
-				(c->isfloating || MFEATURES(m, OVERLAP))
-				&& !c->ismax && !c->isicon) {
+		if (isvisible(c, m) && !c->isbastard
+		&& (c->isfloating || MFEATURES(m, OVERLAP))
+		&& !c->ismax && !c->isicon) {
 			DPRINTF("%d %d\n", c->rx, c->ry);
 			if (!(om = getmonitor(c->rx + c->rw/2,
-					c->ry + c->rh/2)))
+			c->ry + c->rh/2)))
 				continue;
 			dx = om->sx + om->sw - c->rx;
 			dy = om->sy + om->sh - c->ry;
@@ -304,8 +301,7 @@ arrangefloats(Monitor * m) {
 	}
 }
 
-void
-arrangemon(Monitor * m) {
+void arrangemon(Monitor *m) {
 	Client *c;
 
 	if (views[m->curtag].layout->arrange)
@@ -329,13 +325,10 @@ arrangemon(Monitor * m) {
 	}
 }
 
-void
-arrange(Monitor * m) {
-	Monitor *i;
-
+void arrange(Monitor *m) {
 	if (!m) {
-		for (i = monitors; i; i = i->next)
-			arrangemon(i);
+		for (m = mons; m; m = m->next)
+			arrangemon(m);
 	} else
 		arrangemon(m);
 }
@@ -496,7 +489,7 @@ cleanup(void) {
 	}
 	free(tags);
 	free(keys);
-	initmonitors(NULL);
+	initmons(NULL);
 	/* Free resource database */
 	XrmDestroyDatabase(xrdb);
 	deinitstyle();
@@ -533,7 +526,7 @@ configurenotify(XEvent * e) {
 	Client *c;
 
 	if (ev->window == root) {
-		initmonitors(e);
+		initmons(e);
 		for (c = clients; c; c = c->next) {
 			if (c->isbastard) {
 				m = getmonitor(c->x + c->w/2, c->y);
@@ -541,7 +534,7 @@ configurenotify(XEvent * e) {
 				updatestruts(m);
 			}
 		}
-		for (m = monitors; m; m = m->next)
+		for (m = mons; m; m = m->next)
 			updategeom(m);
 		arrange(NULL);
 	}
@@ -934,7 +927,7 @@ isvisible(Client * c, Monitor * m) {
 	if (!c)
 		return False;
 	if (!m) {
-		for (m = monitors; m; m = m->next) {
+		for (m = mons; m; m = m->next) {
 			for (i = 0; i < ntags; i++)
 				if (c->tags[i] && m->seltags[i])
 					return True;
@@ -1239,7 +1232,7 @@ Monitor *
 getmonitor(int x, int y) {
 	Monitor *m;
 
-	for (m = monitors; m; m = m->next) {
+	for (m = mons; m; m = m->next) {
 		if ((x >= m->sx && x <= m->sx + m->sw) &&
 		    (y >= m->sy && y <= m->sy + m->sh))
 			return m;
@@ -1252,7 +1245,7 @@ clientmonitor(Client * c) {
 	Monitor *m;
 
 	assert(c != NULL);
-	for (m = monitors; m; m = m->next)
+	for (m = mons; m; m = m->next)
 		if (isvisible(c, m))
 			return m;
 	return NULL;
@@ -1753,7 +1746,7 @@ initlayouts() {
 }
 
 void
-initmonitors(XEvent * e) {
+initmons(XEvent * e) {
 	Monitor *m;
 	m = emallocz(sizeof(Monitor));
 	m->sx = m->wax = 0;
@@ -1767,7 +1760,7 @@ initmonitors(XEvent * e) {
 	m->seltags = emallocz(ntags * sizeof(Bool));
 	m->seltags[0] = True;
 	m->next = NULL;
-	monitors = m;
+	mons = m;
 	updateatom[WorkArea] (NULL);
 }
 
@@ -1866,7 +1859,7 @@ setup(char *conf) {
 
 	initewmh();
 	inittags();
-	initmonitors(NULL);
+	initmons(NULL);
 
 	/* Init modkey */
 	initrules();
@@ -1895,7 +1888,7 @@ setup(char *conf) {
 	options.rootscrollup[LENGTH(options.rootscrollup) - 1] = '\0';
 	options.snap = atoi(getresource("snap", STR(SNAP)));
 
-	for (m = monitors; m; m = m->next) {
+	for (m = mons; m; m = m->next) {
 		m->struts[RightStrut] = m->struts[LeftStrut] =
 		    m->struts[TopStrut] = m->struts[BotStrut] = 0;
 		updategeom(m);
@@ -2176,7 +2169,7 @@ togglemonitor(const char *arg) {
 		return;
 	cm->mx = x;
 	cm->my = y;
-	for (m = monitors; m == cm && m && m->next; m = m->next);
+	for (m = mons; m == cm && m && m->next; m = m->next);
 	if (!m)
 		return;
 	XWarpPointer(dpy, None, root, 0, 0, 0, 0, m->mx, m->my);
@@ -2193,7 +2186,7 @@ toggleview(const char *arg) {
 
 	memcpy(cm->prevtags, cm->seltags, ntags * sizeof(cm->seltags[0]));
 	cm->seltags[i] = !cm->seltags[i];
-	for (m = monitors; m; m = m->next) {
+	for (m = mons; m; m = m->next) {
 		if (m->seltags[i] && m != cm) {
 			memcpy(m->prevtags, m->seltags, ntags * sizeof(m->seltags[0]));
 			m->seltags[i] = False;
@@ -2465,7 +2458,7 @@ view(const char *arg) {
 	cm->seltags[i] = True;
 	prevtag = cm->curtag;
 	cm->curtag = i;
-	for (m = monitors; m; m = m->next) {
+	for (m = mons; m; m = m->next) {
 		if (m->seltags[i] && m != cm) {
 			m->curtag = prevtag;
 			memcpy(m->prevtags, m->seltags, ntags * sizeof(m->seltags[0]));

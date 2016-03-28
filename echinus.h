@@ -240,7 +240,7 @@ extern Atom atom[NATOMS];
 extern Display *dpy;
 extern Window root;
 extern Client *clients;
-extern Monitor *monitors;
+extern Monitor *mons;
 extern Client *sel;
 extern Client *stack;
 extern unsigned int ntags;

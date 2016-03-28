@@ -132,7 +132,7 @@ ewmh_update_net_current_desktop(void *p) {
 	unsigned int i;
 
 	seltags = emallocz(ntags * sizeof(unsigned long));
-	for (m = monitors; m != NULL; m = m->next) {
+	for (m = mons; m != NULL; m = m->next) {
 		for (i = 0; i < ntags; i++)
 			seltags[i] |= m->seltags[i];
 	}
@@ -158,7 +158,7 @@ ewmh_update_net_window_desktop(void *p) {
 void
 ewmh_update_net_work_area(void *p) {
 	unsigned long *geoms;
-	Monitor *m = monitors;
+	Monitor *m = mons;
 	int i, x, y, w, h;
 
 	geoms = malloc(sizeof(unsigned long)*4*ntags);
