@@ -35,10 +35,10 @@ enum { ClientList, ActiveWindow, WindowDesk,
 	NATOMS
 };
 
-enum { LeftStrut, RightStrut, TopStrut, BotStrut, LastStrut }; /* EWMH struts */
-enum { ColFG, ColBG, ColBorder, ColButton, ColLast }; /* Colors */
-enum { ClientWindow, ClientTitle, ClientFrame }; /* Client parts */
-enum { Iconify, Maximize, Close, LastBtn }; /* Window buttons */
+enum { LeftStrut, RightStrut, TopStrut, BotStrut, LastStrut };
+enum { ColFG, ColBG, ColBorder, ColButton, ColLast };
+enum { ClientWindow, ClientTitle, ClientFrame };
+enum { Iconify, Maximize, Close, LastBtn };
 
 typedef struct Monitor Monitor;
 struct Monitor {
@@ -70,14 +70,9 @@ typedef struct Client Client;
 struct Client {
 	char name[256];
 	int x, y, w, h;
-	// TODO: Use this
-	int oldx, oldy, oldw, oldh;
-	// TODO: Remove this
 	int rx, ry, rw, rh;
 	int th;
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
-	// TODO: Use this
-	int bw, oldbw;
 	int minax, maxax, minay, maxay;
 	int ignoreunmap;
 	long flags;
@@ -88,7 +83,6 @@ struct Client {
 	Client *next;
 	Client *prev;
 	Client *snext;
-	Monitor *mon;
 	Window win;
 	Window title;
 	Window frame;
