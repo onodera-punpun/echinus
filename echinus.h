@@ -70,25 +70,29 @@ typedef struct Client Client;
 struct Client {
 	char name[256];
 	int x, y, w, h;
-	int rx, ry, rw, rh; /* Revert geometry */
-	int th; /* Title height */
+	// TODO: Use this
+	int oldx, oldy, oldw, oldh;
+	// TODO: Remove this
+	int rx, ry, rw, rh;
+	int th;
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
+	// TODO: Use this
+	int bw, oldbw;
 	int minax, maxax, minay, maxay;
 	int ignoreunmap;
 	long flags;
 	int border, oldborder;
-	Bool isbanned, ismax, isfloating, wasfloating;
-	Bool isicon, isfill;
-	Bool isfixed, isbastard, isfocusable, hasstruts;
+	Bool isbanned, ismax, isfloating, wasfloating, isfullscreen,
+	     isicon, isfill, isfixed, isbastard, isfocusable, hasstruts;
 	Bool *tags;
 	Client *next;
 	Client *prev;
 	Client *snext;
+	Monitor *mon;
 	Window win;
 	Window title;
 	Window frame;
 	Pixmap drawable;
-	XftDraw *xftdraw;
 };
 
 /* Per-tag settings */
@@ -118,9 +122,7 @@ typedef struct {
 	struct {
 		unsigned long norm[ColLast];
 		unsigned long sel[ColLast];
-		XftColor *font[2];
 	} color;
-	XftFont *font;
 } Style;
 
 /* Keyboard shortcuts */
@@ -136,6 +138,8 @@ typedef struct {
 	char *prop;
 	char *tags;
 	Bool isfloating;
+	// TODO: Remove this?
+	Bool isfullscreen;
 	Bool hastitle;
 	regex_t *propregex;
 	regex_t *tagregex;

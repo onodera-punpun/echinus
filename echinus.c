@@ -34,7 +34,7 @@
 #include <locale.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <regex.h>
 #include <signal.h>
@@ -46,7 +46,6 @@
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
 #include <X11/Xresource.h>
-#include <X11/Xft/Xft.h>
 #include "echinus.h"
 
 #define BUTTONMASK            (ButtonPressMask | ButtonReleaseMask)
@@ -532,16 +531,18 @@ void configurenotify(XEvent *e) {
 	if (ev->window == root) {
 		initmons(e);
 
-		for (c = clients; c; c = c->next) {
-			if (c->isbastard) {
-				m = getmonitor(c->x + c->w/2, c->y);
-				c->tags = m->seltags;
-				updatestruts(m);
+		for (m = mons; m; m = m->next) {
+			for (c = clients; c; c = c->next) {
+				if (c->isbastard) {
+					m = getmonitor(c->x + c->w/2, c->y);
+					c->tags = m->seltags;
+					updatestruts(m);
+				} else if (c->isfullscreen)
+					// TODO: Not working
+					resize(c, m->wax, m->way, m->waw, m->wah, 0);
 			}
-		}
-
-		for (m = mons; m; m = m->next)
 			updategeom(m);
+		}
 
 		focus(NULL);
 		arrange(NULL);
@@ -800,28 +801,27 @@ void iconify(const char *arg) {
 	arrange(curmon());
 }
 
-void
-incnmaster(const char *arg) {
+void incnmaster(const char *arg) {
 	unsigned int i;
 
 	if (!FEATURES(curlayout, NMASTER))
 		return;
 
-	if (!arg) {
+	if (!arg)
 		views[curmontag].nmaster = DEFNMASTER;
-	} else {
+	else {
 		i = atoi(arg);
 		if ((views[curmontag].nmaster + i) < 1
 		    || curwah / (views[curmontag].nmaster + i) <= 2 * style.border)
 			return;
 		views[curmontag].nmaster += i;
 	}
+
 	if (sel)
 		arrange(curmon());
 }
 
-Client *
-getclient(Window w, Client * list, int part) {
+Client *getclient(Window w, Client *list, int part) {
 	Client *c;
 
 	#define ClientPart(_c, _part) (((_part) == ClientWindow) ? (_c)->win : \
@@ -833,8 +833,7 @@ getclient(Window w, Client * list, int part) {
 	return c;
 }
 
-long
-getstate(Window w) {
+long getstate(Window w) {
 	long ret = -1;
 	long *p = NULL;
 	unsigned long n;
@@ -843,64 +842,67 @@ getstate(Window w) {
 
 	if (n != 0)
 		ret = *p;
-	XFree(p);
 
+	XFree(p);
 	return ret;
 }
 
-const char *
-getresource(const char *resource, const char *defval) {
+const char *getresource(const char *resource, const char *defval) {
 	static char name[256], class[256], *type;
 	XrmValue value;
 
 	snprintf(name, sizeof(name), "%s.%s", RESNAME, resource);
 	snprintf(class, sizeof(class), "%s.%s", RESCLASS, resource);
 	XrmGetResource(xrdb, name, class, &type, &value);
+
 	if (value.addr)
 		return value.addr;
+
 	return defval;
 }
 
-Bool
-gettextprop(Window w, Atom atom, char *text, unsigned int size) {
+Bool gettextprop(Window w, Atom atom, char *text, unsigned int size) {
 	char **list = NULL;
 	int n;
 	XTextProperty name;
 
 	if (!text || size == 0)
 		return False;
+
 	text[0] = '\0';
 	XGetTextProperty(dpy, w, &name, atom);
+
 	if (!name.nitems)
 		return False;
-	if (name.encoding == XA_STRING) {
+
+	if (name.encoding == XA_STRING)
 		strncpy(text, (char *) name.value, size - 1);
-	} else {
+	else {
 		if (XmbTextPropertyToTextList(dpy, &name, &list, &n) >= Success
 		    && n > 0 && *list) {
 			strncpy(text, *list, size - 1);
 			XFreeStringList(list);
 		}
 	}
+
 	text[size - 1] = '\0';
 	XFree(name.value);
 	return True;
 }
 
-int
-idxoftag(const char *tag) {
+int idxoftag(const char *tag) {
 	unsigned int i;
 
 	for (i = 0; (i < ntags) && strcmp(tag, tags[i]); i++);
 	return (i < ntags) ? i : 0;
 }
 
-Bool
-isvisible(Client * c, Monitor * m) {
+Bool isvisible(Client *c, Monitor *m) {
 	unsigned int i;
 
 	if (!c)
 		return False;
+
 	if (!m) {
 		for (m = mons; m; m = m->next) {
 			for (i = 0; i < ntags; i++)
@@ -912,27 +914,27 @@ isvisible(Client * c, Monitor * m) {
 			if (c->tags[i] && m->seltags[i])
 				return True;
 	}
+
 	return False;
 }
 
-void
-grabkeys(void) {
+void grabkeys(void) {
 	unsigned int modifiers[] = { 0, LockMask, numlockmask, numlockmask|LockMask };
 	unsigned int i, j;
 	KeyCode code;
 
 	XUngrabKey(dpy, AnyKey, AnyModifier, root);
+
 	for (i = 0; i < nkeys; i++) {
 		if ((code = XKeysymToKeycode(dpy, keys[i]->keysym))) {
 			for (j = 0; j < LENGTH(modifiers); j++)
 				XGrabKey(dpy, code, keys[i]->mod | modifiers[j], root,
-                         True, GrabModeAsync, GrabModeAsync);
+				         True, GrabModeAsync, GrabModeAsync);
 		}
     }
 }
 
-void
-keypress(XEvent * e) {
+void keypress(XEvent *e) {
 	unsigned int i;
 	KeySym keysym;
 	XKeyEvent *ev;
@@ -952,8 +954,7 @@ keypress(XEvent * e) {
 		}
 }
 
-void
-killclient(const char *arg) {
+void killclient(const char *arg) {
 	XEvent ev;
 
 	if (!sel)
@@ -971,8 +972,7 @@ killclient(const char *arg) {
 		XKillClient(dpy, sel->win);
 }
 
-void
-leavenotify(XEvent * e) {
+void leavenotify(XEvent *e) {
 	XCrossingEvent *ev = &e->xcrossing;
 
 	if ((ev->window == root) && !ev->same_screen) {
@@ -981,8 +981,7 @@ leavenotify(XEvent * e) {
 	}
 }
 
-void
-manage(Window w, XWindowAttributes * wa) {
+void manage(Window w, XWindowAttributes *wa) {
 	Client *c, *t = NULL;
 	Monitor *cm = NULL;
 	Window trans;
@@ -993,6 +992,7 @@ manage(Window w, XWindowAttributes * wa) {
 
 	c = emallocz(sizeof(Client));
 	c->win = w;
+
 	if (checkatom(c->win, atom[WindowType], atom[WindowTypeDesk]) ||
 	    checkatom(c->win, atom[WindowType], atom[WindowTypeDock])) {
 		c->isbastard = True;
@@ -1056,24 +1056,9 @@ manage(Window w, XWindowAttributes * wa) {
 		free(c->tags);
 		c->tags = cm->seltags;
 	}
-#if 0
-	if (c->w == cm->sw && c->h == cm->sh) {
-		c->x = 0;
-		c->y = 0;
-	} else if (!c->isbastard) {
-		if (c->x + c->w > cm->wax + cm->waw)
-			c->x = cm->waw - c->w;
-		if (c->y + c->h > cm->way + cm->wah)
-			c->y = cm->wah - c->h;
-		if (c->x < cm->wax)
-			c->x = cm->wax;
-		if (c->y < cm->way)
-			c->y = cm->way;
-	}
-#endif
 
 	XGrabButton(dpy, AnyButton, AnyModifier, c->win, True,
-			ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
+	            ButtonPressMask, GrabModeSync, GrabModeAsync, None, None);
 	twa.override_redirect = True;
 	twa.event_mask = FRAMEMASK;
 	mask = CWOverrideRedirect | CWEventMask;
@@ -1083,11 +1068,10 @@ manage(Window w, XWindowAttributes * wa) {
 		twa.background_pixel = BlackPixel(dpy, screen);
 		twa.border_pixel = BlackPixel(dpy, screen);
 	}
-	c->frame =
-	    XCreateWindow(dpy, root, c->x, c->y, c->w,
-	    c->h, c->border, wa->depth == 32 ? 32 : DefaultDepth(dpy, screen),
-	    InputOutput, wa->depth == 32 ? wa->visual : DefaultVisual(dpy,
-		screen), mask, &twa);
+	c->frame = XCreateWindow(dpy, root, c->x, c->y, c->w,
+	                         c->h, c->border, wa->depth == 32 ? 32 : DefaultDepth(dpy, screen),
+	                         InputOutput, wa->depth == 32 ? wa->visual : DefaultVisual(dpy,
+	                         screen), mask, &twa);
 
 	wc.border_width = c->border;
 	XConfigureWindow(dpy, c->frame, CWBorderWidth, &wc);
@@ -1097,13 +1081,10 @@ manage(Window w, XWindowAttributes * wa) {
 	/* We create title as root's child as a workaround for 32bit visuals */
 	if (c->title) {
 		c->title = XCreateWindow(dpy, root, 0, 0, c->w, c->th,
-		    0, DefaultDepth(dpy, screen), CopyFromParent,
-		    DefaultVisual(dpy, screen), CWEventMask, &twa);
+		           0, DefaultDepth(dpy, screen), CopyFromParent,
+		           DefaultVisual(dpy, screen), CWEventMask, &twa);
 		c->drawable =
 		    XCreatePixmap(dpy, root, c->w, c->th, DefaultDepth(dpy, screen));
-		c->xftdraw =
-		    XftDrawCreate(dpy, c->drawable, DefaultVisual(dpy, screen),
-		    DefaultColormap(dpy, screen));
 	} else {
 		c->title = (Window) NULL;
 	}
@@ -1129,17 +1110,20 @@ manage(Window w, XWindowAttributes * wa) {
 	updateatom[ClientList] (NULL);
 	updateatom[WindowDesk] (c);
 	updateframe(c);
+
 	if (!cm)
 		return;
+
 	if (c->hasstruts)
 		updategeom(cm);
+
 	arrange(cm);
+
 	if (!checkatom(c->win, atom[WindowType], atom[WindowTypeDesk]))
 		focus(NULL);
 }
 
-void
-mappingnotify(XEvent * e) {
+void mappingnotify(XEvent *e) {
 	XMappingEvent *ev = &e->xmapping;
 
 	XRefreshKeyboardMapping(ev);
@@ -1147,16 +1131,17 @@ mappingnotify(XEvent * e) {
 		grabkeys();
 }
 
-void
-maprequest(XEvent * e) {
+void maprequest(XEvent *e) {
 	static XWindowAttributes wa;
 	Client *c;
 	XMapRequestEvent *ev = &e->xmaprequest;
 
 	if (!XGetWindowAttributes(dpy, ev->window, &wa))
 		return;
+
 	if (wa.override_redirect)
 		return;
+
 	if (!(c = getclient(ev->window, clients, ClientWindow)))
 		manage(ev->window, &wa);
 }
@@ -2230,7 +2215,6 @@ unmanage(Client * c) {
 	XUnmapWindow(dpy, c->frame);
 	XSetErrorHandler(xerrordummy);
 	if (c->title) {
-		XftDrawDestroy(c->xftdraw);
 		XFreePixmap(dpy, c->drawable);
 		XDestroyWindow(dpy, c->title);
 		c->title = (Window) NULL;
@@ -2265,24 +2249,25 @@ unmanage(Client * c) {
 	updateatom[ClientList] (NULL);
 }
 
-void
-updategeom(Monitor * m) {
+void updategeom(Monitor *m) {
 	m->wax = m->sx;
 	m->way = m->sy;
 	m->waw = m->sw;
 	m->wah = m->sh;
+
 	switch (views[m->curtag].barpos) {
-	default:
-		m->wax += m->struts[LeftStrut];
-		m->way += m->struts[TopStrut];
-		m->waw -= (m->struts[RightStrut] + m->struts[LeftStrut]);
-		m->wah = min(m->wah - m->struts[TopStrut],
-			(DisplayHeight(dpy, screen) - (m->struts[BotStrut] + m->struts[TopStrut])));
-		break;
-	case StrutsHide:
-	case StrutsOff:
-		break;
+		default:
+			m->wax += m->struts[LeftStrut];
+			m->way += m->struts[TopStrut];
+			m->waw -= (m->struts[RightStrut] + m->struts[LeftStrut]);
+			m->wah = min(m->wah - m->struts[TopStrut],
+			         (DisplayHeight(dpy, screen) - (m->struts[BotStrut] + m->struts[TopStrut])));
+			break;
+		case StrutsHide:
+		case StrutsOff:
+			break;
 	}
+
 	updateatom[WorkArea] (NULL);
 }
 

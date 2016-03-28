@@ -7,12 +7,14 @@
  *
  */
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <regex.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
-#include <X11/Xft/Xft.h>
 #include "echinus.h"
 #include "config.h"
 

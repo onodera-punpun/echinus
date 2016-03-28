@@ -9,8 +9,8 @@ INSTALL_DIR  ?= install -m755 -d
 INSTALL_PROG ?= install -m755
 INSTALL_FILE ?= install -m644
 
-CFLAGS   += -I. -O2 `pkg-config --cflags x11 xft`
-LIBS     += `pkg-config --libs x11 xft`
+CFLAGS   += -I. -O2 `pkg-config --cflags x11`
+LIBS     += `pkg-config --libs x11`
 CPPFLAGS += -DVERSION=\"$(VERSION)\" -DSYSCONFPATH=\"$(CONFPREFIX)\"
 
 ifdef DEBUG
