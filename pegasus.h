@@ -226,8 +226,8 @@ void initstyle();
                         c->name, c->x, c->y, c->w, c->h, c->th, c->isfloating, c->isbastard, c->ismax)
 
 #define OPAQUE      0xffffffff
-#define RESNAME     "echinus"
-#define RESCLASS    "Echinus"
+#define RESNAME     "pegasus"
+#define RESCLASS    "Pegasus"
 #define STR(_s)     TOSTR(_s)
 #define TOSTR(_s)   #_s
 #define min(_a, _b) ((_a) < (_b) ? (_a) : (_b))

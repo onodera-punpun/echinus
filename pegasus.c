@@ -1,12 +1,12 @@
 /* See LICENSE file for copyright and license details.
  *
- * echinus window manager is designed like any other X client as well. It is
+ * pegasus window manager is designed like any other X client as well. It is
  * driven through handling X events. In contrast to other X clients, a window
  * manager selects for SubstructureRedirectMask on the root window, to receive
  * events about window (dis-)appearance.  Only one X connection at a time is
  * allowed to select for this event mask.
  *
- * The event handlers of echinus are organized in an
+ * The event handlers of pegasus are organized in an
  * array which is accessed whenever a new event has been fetched. This allows
  * event dispatching in O(1) time.
  *
@@ -46,7 +46,7 @@
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
 #include <X11/Xresource.h>
-#include "echinus.h"
+#include "pegasus.h"
 
 #define BUTTONMASK            (ButtonPressMask | ButtonReleaseMask)
 #define CLEANMASK(mask)       (mask & ~(numlockmask | LockMask))
@@ -233,6 +233,7 @@ void applyatoms(Client *c) {
 	if (n != 0) {
 		if (*t >= ntags)
 			return;
+
 		for (i = 0; i < ntags; i++)
 			c->tags[i] = (i == *t) ? 1 : 0;
 	}
@@ -480,7 +481,7 @@ void checkotherwm(void) {
 	XSelectInput(dpy, root, SubstructureRedirectMask);
 	XSync(dpy, False);
 	if (otherwm)
-		eprint("echinus: another window manager is already running\n");
+		eprint("pegasus: another window manager is already running\n");
 	XSync(dpy, False);
 	XSetErrorHandler(NULL);
 	xerrorxlib = XSetErrorHandler(xerror);
@@ -1694,12 +1695,14 @@ void initlayouts() {
 		views[i].layout = &layouts[0];
 		snprintf(conf, sizeof(conf), "tags.layout%d", i);
 		strncpy(&ltname, getresource(conf, deflayout), 1);
+
 		for (j = 0; j < LENGTH(layouts); j++) {
 			if (layouts[j].symbol == ltname) {
 				views[i].layout = &layouts[j];
 				break;
 			}
 		}
+
 		views[i].mwfact = mwfact;
 		views[i].nmaster = nmaster;
 		views[i].barpos = StrutsOn;
@@ -1759,11 +1762,9 @@ void setup(char *conf) {
 	char oldcwd[256], path[256] = "/";
 	char *home, *slash;
 
-	/* Configuration files to open (%s gets converted to $HOME) */
 	const char *confs[] = {
 		conf,
-		"%s/.echinus/echinusrc",
-		SYSCONFPATH "/echinusrc",
+		"%s/.pegasus/config",
 		NULL
 	};
 
@@ -1798,7 +1799,7 @@ void setup(char *conf) {
 	if (!home)
 		*home = '/';
 	if (!getcwd(oldcwd, sizeof(oldcwd)))
-		eprint("echinus: getcwd error: %s\n", strerror(errno));
+		eprint("pegasus: getcwd error: %s\n", strerror(errno));
 
 	for (i = 0; confs[i] != NULL; i++) {
 		if (*confs[i] == '\0')
@@ -1815,7 +1816,7 @@ void setup(char *conf) {
 			break;
 	}
 	if (!xrdb)
-		fprintf(stderr, "echinus: no configuration file found, using defaults\n");
+		fprintf(stderr, "pegasus: no configuration file found, using defaults\n");
 
 	initewmh();
 	inittags();
@@ -1869,7 +1870,7 @@ void spawn(const char *arg) {
 				close(ConnectionNumber(dpy));
 			setsid();
 			execl(shell, shell, "-c", arg, (char *) NULL);
-			fprintf(stderr, "echinus: execl '%s -c %s'", shell, arg);
+			fprintf(stderr, "pegasus: execl '%s -c %s'", shell, arg);
 			perror(" failed");
 		}
 		exit(0);
@@ -2378,7 +2379,7 @@ xerror(Display * dsply, XErrorEvent * ee) {
 	    || (ee->request_code == X_CopyArea && ee->error_code == BadDrawable))
 		return 0;
 	fprintf(stderr,
-	    "echinus: fatal error: request code=%d, error code=%d\n",
+	    "pegasus: fatal error: request code=%d, error code=%d\n",
 	    ee->request_code, ee->error_code);
 	return xerrorxlib(dsply, ee); /* May call exit */
 }
@@ -2497,16 +2498,19 @@ main(int argc, char *argv[]) {
 	if (argc == 3 && !strcmp("-f", argv[1]))
 		snprintf(conf, sizeof(conf), "%s", argv[2]);
 	else if (argc == 2 && !strcmp("-v", argv[1]))
-		eprint("echinus-" VERSION " (c) 2011 Alexander Polakov\n");
+		eprint("pegasus-" VERSION " (c) 2016 Camille Scholtz\n");
 	else if (argc != 1)
-		eprint("usage: echinus [-v] [-f conf]\n");
+		eprint("usage: pegasus [-v] [-f conf]\n");
 
 	setlocale(LC_CTYPE, "");
+
 	if (!(dpy = XOpenDisplay(0)))
-		eprint("echinus: cannot open display\n");
+		eprint("pegasus: cannot open display\n");
+
 	signal(SIGHUP, sighandler);
 	signal(SIGINT, sighandler);
 	signal(SIGQUIT, sighandler);
+
 	cargv = argv;
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);

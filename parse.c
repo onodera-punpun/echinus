@@ -1,5 +1,6 @@
 /*
- *  echinus wm written by Alexander Polakov <polachok@gmail.com>
+ *  echinus wm written by Alexander Polakov <polachok at gmail dot com>
+ *  pegasus wm forked by Camille Scholtz <onodera at openmailbox dot org>
  *  this file contains code to parse rules and keybindings
  */
 
@@ -12,7 +13,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
-#include "echinus.h"
+#include "pegasus.h"
 #include "config.h"
 
 typedef struct {

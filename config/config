@@ -1,0 +1,84 @@
+## MAIN
+
+Pegasus*attachaside: 0
+Pegasus*deflayout: i
+Pegasus*deftilinglayout: s
+Pegasus*gap: 40
+Pegasus*margin: 121
+Pegasus*modkey: W
+Pegasus*mwfact: 0.618
+Pegasus*nmaster: 1
+Pegasus*sloppy: 2
+
+
+## BORDER
+
+Pegasus*border: 5
+Pegasus*selected.border: #EEEEEE
+Pegasus*normal.border: #EEEEEE
+
+
+## BUTTON SETTINGS
+
+Pegasus*button.iconify.pixmap: iconify.xbm
+Pegasus*button.maximize.pixmap: max.xbm
+Pegasus*button.close.pixmap: close.xbm
+Pegasus*selected.button: #BC846F
+Pegasus*normal.button: #BC846F
+
+
+## HACKS SETTINGS
+
+Pegasus*hidebastards: 0
+
+
+## KEYBINDS SETTINGS
+
+Pegasus*restart: W + p = echinus
+Pegasus*killclient: W + q
+Pegasus*spawn0: W + Return = urxvtc
+Pegasus*spawn1: C + space = mpc -q toggle
+Pegasus*spawn2: C + Left = mpc -q seek -10
+Pegasus*spawn3: C + Right = mpc -q seek +10
+Pegasus*spawn4: C + Up = mpc -q prev
+Pegasus*spawn5: C + Down = mpc -q next
+Pegasus*spawn6: C + r = mpdrandom
+Pegasus*tag0: W + 1 = w
+Pegasus*tag1: W + 2 = i
+Pegasus*tag2: W + 3 = s
+Pegasus*zoom: W + w
+Pegasus*togglefloatingtag: W + d
+Pegasus*togglefloatingwin: W + e
+Pegasus*decmwfact: W + Left = -0.05
+Pegasus*incmwfact: W + Right = +0.05
+
+
+## MISC SETTINGS
+
+Pegasus*opacity: 1
+Pegasus*attachaside: 1
+Pegasus*rootrightclick: mygtkmenu $HOME/.mygtkmenu
+Pegasus*rootscrolldown: xdesktop -p
+Pegasus*rootscrollup: xdesktop -n
+
+
+## TAGS SETTINGS
+
+Pegasus*tags.number: 3
+Pegasus*tags.name0: w
+Pegasus*tags.name1: i
+Pegasus*tags.name2: s
+Pegasus*rule0: Seamonkey.* w 0 1
+Pegasus*rule1: mpv.* NULL 1 1
+
+
+## TITLE SETTINGS
+
+Pegasus*decoratetiled: 1
+Pegasus*font: dina
+Pegasus*title: 30
+Pegasus*titlelayout: TCI--M
+Pegasus*normal.bg: #E5AB96
+Pegasus*normal.fg: #E5AB96
+Pegasus*selected.bg: #E5AB96
+Pegasus*selected.fg: #E5AB96
