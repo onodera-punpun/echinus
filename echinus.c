@@ -48,10 +48,6 @@
 #include <X11/Xutil.h>
 #include <X11/Xresource.h>
 #include <X11/Xft/Xft.h>
-#ifdef XRANDR
-	#include <X11/extensions/Xrandr.h>
-	#include <X11/extensions/randr.h>
-#endif
 #include "echinus.h"
 
 #define BUTTONMASK            (ButtonPressMask | ButtonReleaseMask)
@@ -229,9 +225,6 @@ void (*handler[LASTEvent]) (XEvent *) = {
 	[ReparentNotify]   = reparentnotify,
 	[UnmapNotify]      = unmapnotify,
 	[ClientMessage]    = clientmessage,
-#ifdef XRANDR
-	[RRScreenChangeNotify] = initmonitors,
-#endif
 };
 
 void
@@ -540,23 +533,17 @@ configurenotify(XEvent * e) {
 	Client *c;
 
 	if (ev->window == root) {
-#ifdef XRANDR
-		if (XRRUpdateConfiguration((XEvent *) ev)) {
-#endif
-			initmonitors(e);
-			for (c = clients; c; c = c->next) {
-				if (c->isbastard) {
-					m = getmonitor(c->x + c->w/2, c->y);
-					c->tags = m->seltags;
-					updatestruts(m);
-				}
+		initmonitors(e);
+		for (c = clients; c; c = c->next) {
+			if (c->isbastard) {
+				m = getmonitor(c->x + c->w/2, c->y);
+				c->tags = m->seltags;
+				updatestruts(m);
 			}
-			for (m = monitors; m; m = m->next)
-				updategeom(m);
-			arrange(NULL);
-#ifdef XRANDR
 		}
-#endif
+		for (m = monitors; m; m = m->next)
+			updategeom(m);
+		arrange(NULL);
 	}
 }
 
@@ -1768,73 +1755,6 @@ initlayouts() {
 void
 initmonitors(XEvent * e) {
 	Monitor *m;
-#ifdef XRANDR
-	Monitor *t;
-	XRRCrtcInfo *ci;
-	XRRScreenResources *sr;
-	int c, n;
-	int ncrtc = 0;
-	int dummy1, dummy2, major, minor;
-
-	/* Free */
-	if (monitors) {
-		m = monitors;
-		do {
-			t = m->next;
-			free(m->seltags);
-			free(m->prevtags);
-			free(m);
-			m = t;
-		} while (m);
-		monitors = NULL;
-	}
-	if (!running)
-	    return;
-	/* Initial Xrandr setup */
-	if (XRRQueryExtension(dpy, &dummy1, &dummy2))
-		if (XRRQueryVersion(dpy, &major, &minor) && major < 1)
-			goto no_xrandr;
-
-	/* Map virtual screens onto physical screens */
-	sr = XRRGetScreenResources(dpy, root);
-	if (sr == NULL)
-		goto no_xrandr;
-	else
-		ncrtc = sr->ncrtc;
-
-	for (c = 0, n = 0, ci = NULL; c < ncrtc; c++) {
-		ci = XRRGetCrtcInfo(dpy, sr, sr->crtcs[c]);
-		if (ci->noutput == 0)
-			continue;
-
-		if (ci != NULL && ci->mode == None)
-			fprintf(stderr, "???\n");
-		else {
-			/* If monitor is a mirror, we don't care about it */
-			if (n && ci->x == monitors->sx && ci->y == monitors->sy)
-				continue;
-			m = emallocz(sizeof(Monitor));
-			m->sx = m->wax = ci->x;
-			m->sy = m->way = ci->y;
-			m->sw = m->waw = ci->width;
-			m->sh = m->wah = ci->height;
-			m->mx = m->sx + m->sw/2;
-			m->my = m->sy + m->sh/2;
-			m->curtag = n;
-			m->prevtags = emallocz(ntags * sizeof(Bool));
-			m->seltags = emallocz(ntags * sizeof(Bool));
-			m->seltags[n] = True;
-			m->next = monitors;
-			monitors = m;
-			n++;
-		}
-		XRRFreeCrtcInfo(ci);
-	}
-	XRRFreeScreenResources(sr);
-	updateatom[WorkArea] (NULL);
-	return;
-      no_xrandr:
-#endif
 	m = emallocz(sizeof(Monitor));
 	m->sx = m->wax = 0;
 	m->sy = m->way = 0;
@@ -1982,9 +1902,6 @@ setup(char *conf) {
 	}
 
 	chdir(oldcwd);
-
-	/* Multihead support */
-	selscreen = XQueryPointer(dpy, root, &w, &w, &d, &d, &d, &d, &mask);
 }
 
 void
@@ -2220,7 +2137,6 @@ togglemax(const char *arg) {
 	XEvent ev;
 	Monitor *m = curmonitor();
 
-	// TODO: mpv wont fullscreen because it's not selected yet
 	if (!sel)
 		return;
 

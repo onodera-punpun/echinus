@@ -18,12 +18,6 @@ CFLAGS  += -g3 -ggdb3 -std=c99 -pedantic -Og $(INCS) -DDEBUG $(DEFS)
 LDFLAGS += -g3 -ggdb3
 endif
 
-ifdef MULTIHEAD
-CPPFLAGS += -DXRANDR=1
-LIBS     += $(shell pkg-config --libs xrandr)
-CFLAGS   += $(shell pkg-config --cflags xrandr)
-endif
-
 VERSION = 0.4.9
 
 
