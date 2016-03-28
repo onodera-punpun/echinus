@@ -254,7 +254,7 @@ ewmh_process_state_atom(Client *c, Atom state, int set) {
 		XChangeProperty(dpy, c->win, atom[WindowState], XA_ATOM, 32,
 		    PropModeReplace, (unsigned char *) data, 2);
 		DPRINT;
-		arrange(selmon());
+		arrange(curmon());
 		DPRINTF("%s: x%d y%d w%d h%d\n", c->name, c->x, c->y, c->w, c->h);
 	}
 	if (state == atom[WindowStateModal])
@@ -274,7 +274,7 @@ clientmessage(XEvent *e) {
 		if ((c = getclient(ev->window, clients, ClientWindow))) {
 				c->isicon = False;
 				focus(c);
-				arrange(selmon());
+				arrange(curmon());
 		}
 	} else if (ev->message_type == atom[CurDesk]) {
 		view(tags[ev->data.l[0]]);
