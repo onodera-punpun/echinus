@@ -1988,18 +1988,15 @@ void fibonacci(Monitor *m, int s) {
 	}
 }
 
-void
-dwindle(Monitor * m) {
+void dwindle(Monitor * m) {
 	fibonacci(m, 1);
 }
 
-void
-spiral(Monitor * m) {
+void spiral(Monitor * m) {
 	fibonacci(m, 0);
 }
 
-void
-togglestruts(const char *arg) {
+void togglestruts(const char *arg) {
 	views[curmontag].barpos =
 		(views[curmontag].barpos ==
 		StrutsOn) ? (options.hidebastards ? StrutsHide : StrutsOff) : StrutsOn;
@@ -2007,8 +2004,7 @@ togglestruts(const char *arg) {
 	arrange(curmon());
 }
 
-void
-togglefloatingwin(const char *arg) {
+void togglefloatingwin(const char *arg) {
 	if (!sel)
 		return;
 
@@ -2017,27 +2013,24 @@ togglefloatingwin(const char *arg) {
 
 	if (sel->isfloating) {
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, False);
-	} else {
+	} else
 		save(sel);
-	}
 
 	arrange(curmon());
 }
 
-void
-togglefloatingtag(const char *arg) {
+void togglefloatingtag(const char *arg) {
 	const char *torf;
 
 	if (FEATURES(curlayout, OVERLAP)) {
 		torf = options.deftilinglayout;
-	 } else
+	} else
 		torf = "i";
 
 	setlayout(torf);
 }
 
-void
-togglefill(const char *arg) {
+void togglefill(const char *arg) {
 	XEvent ev;
 	Monitor *m = curmon();
 	Client *c;
@@ -2050,6 +2043,7 @@ togglefill(const char *arg) {
 
 	if (!sel || sel->isfixed || !sel->isfloating || MFEATURES(m, OVERLAP))
 		return;
+
 	for (c = clients; c; c = c->next) {
 		if (isvisible(c, m) && (c != sel) && !c->isbastard
 					&& (c->isfloating || MFEATURES(m, OVERLAP))) {
@@ -2068,23 +2062,24 @@ togglefill(const char *arg) {
 		}
 		DPRINTF("x1 = %d x2 = %d y1 = %d y2 = %d\n", x1, x2, y1, y2);
 	}
+
 	w = x2 - x1;
 	h = y2 - y1;
 	DPRINTF("x1 = %d w = %d y1 = %d h = %d\n", x1, w, y1, h);
+
 	if ((w < sel->w) || (h < sel->h))
 		return;
 
 	if ((sel->isfill = !sel->isfill)) {
 		save(sel);
 		resize(sel, x1, y1, w, h, True);
-	} else {
+	} else
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, True);
-	}
+
 	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
 }
 
-void
-togglemax(const char *arg) {
+void togglemax(const char *arg) {
 	XEvent ev;
 	Monitor *m = curmon();
 
@@ -2097,45 +2092,48 @@ togglemax(const char *arg) {
 	if (sel->ismax) {
 		save(sel);
 		resize(sel, m->sx - sel->border, m->sy - sel->border - sel->th, m->sw, m->sh + sel->th, False);
-	} else {
+	} else
 		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, True);
-	}
 }
 
-void
-toggletag(const char *arg) {
+void toggletag(const char *arg) {
 	unsigned int i, j;
 
 	if (!sel)
 		return;
+
 	i = idxoftag(arg);
 	sel->tags[i] = !sel->tags[i];
+
 	for (j = 0; j < ntags && !sel->tags[j]; j++);
 	if (j == ntags)
 		sel->tags[i] = True; /* At least one tag must be enabled */
+
 	drawclient(sel);
 	arrange(NULL);
 }
 
-void
-togglemonitor(const char *arg) {
+void togglemonitor(const char *arg) {
 	Monitor *m, *cm;
 	int x, y;
 
 	getpointer(&x, &y);
+
 	if (!(cm = getmon(x, y)))
 		return;
+
 	cm->mx = x;
 	cm->my = y;
 	for (m = mons; m == cm && m && m->next; m = m->next);
+
 	if (!m)
 		return;
+
 	XWarpPointer(dpy, None, root, 0, 0, 0, 0, m->mx, m->my);
 	focus(NULL);
 }
 
-void
-toggleview(const char *arg) {
+void toggleview(const char *arg) {
 	unsigned int i, j;
 	Monitor *m, *cm;
 
@@ -2144,48 +2142,55 @@ toggleview(const char *arg) {
 
 	memcpy(cm->prevtags, cm->seltags, ntags * sizeof(cm->seltags[0]));
 	cm->seltags[i] = !cm->seltags[i];
+
 	for (m = mons; m; m = m->next) {
 		if (m->seltags[i] && m != cm) {
 			memcpy(m->prevtags, m->seltags, ntags * sizeof(m->seltags[0]));
 			m->seltags[i] = False;
 			for (j = 0; j < ntags && !m->seltags[j]; j++);
+
 			if (j == ntags) {
 				m->seltags[i] = True;   /* At least one tag must be viewed */
 				cm->seltags[i] = False; /* Can't toggle */
 				j = i;
 			}
+
 			if (m->curtag == i)
 				m->curtag = j;
+
 			arrange(m);
 		}
 	}
+
 	arrange(cm);
 	focus(NULL);
 	updateatom[CurDesk] (NULL);
 }
 
-void
-focusview(const char *arg) {
+void focusview(const char *arg) {
 	Client *c;
 	int i;
 
 	toggleview(arg);
 	i = idxoftag(arg);
+
 	if (!curseltags[i])
 		return;
+
 	for (c = stack; c; c = c->snext) {
 		if (c->tags[i] && !c->isbastard) {
 			focus(c);
 			break;
 		}
 	}
+
 	restack(curmon());
 }
 
-void
-unban(Client * c) {
+void unban(Client *c) {
 	if (!c->isbanned)
 		return;
+
 	XSelectInput(dpy, c->win, CLIENTMASK & ~(StructureNotifyMask | EnterWindowMask));
 	XSelectInput(dpy, c->frame, NoEventMask);
 	XMapWindow(dpy, c->win);
@@ -2196,8 +2201,7 @@ unban(Client * c) {
 	c->isbanned = False;
 }
 
-void
-unmanage(Client * c) {
+void unmanage(Client *c) {
 	Monitor *m;
 	XWindowChanges wc;
 	Bool doarrange, dostruts;
@@ -2205,32 +2209,38 @@ unmanage(Client * c) {
 
 	m = clientmonitor(c);
 	doarrange = !(c->isfloating || c->isfixed
-	    || XGetTransientForHint(dpy, c->win, &trans)) || c->isbastard;
+	             || XGetTransientForHint(dpy, c->win, &trans)) || c->isbastard;
 	dostruts = c->hasstruts;
+
 	/* The server grab construct avoids race conditions. */
 	XGrabServer(dpy);
 	XSelectInput(dpy, c->frame, NoEventMask);
 	XUnmapWindow(dpy, c->frame);
 	XSetErrorHandler(xerrordummy);
+
 	if (c->title) {
 		XFreePixmap(dpy, c->drawable);
 		XDestroyWindow(dpy, c->title);
 		c->title = (Window) NULL;
 	}
+
 	XSelectInput(dpy, c->win, CLIENTMASK & ~(StructureNotifyMask | EnterWindowMask));
 	XUngrabButton(dpy, AnyButton, AnyModifier, c->win);
 	XReparentWindow(dpy, c->win, root, c->x, c->y);
 	XMoveWindow(dpy, c->win, c->x, c->y);
+
 	if (!running)
 		XMapWindow(dpy, c->win);
 	wc.border_width = c->oldborder;
 	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* Restore border */
 	detach(c);
 	detachstack(c);
+
 	if (sel == c)
 		focus(NULL);
 	setclientstate(c, WithdrawnState);
 	XDestroyWindow(dpy, c->frame);
+
 	/* c->tags points to monitor */
 	if (!c->isbastard)
 		free(c->tags);
@@ -2238,12 +2248,15 @@ unmanage(Client * c) {
 	XSync(dpy, False);
 	XSetErrorHandler(xerror);
 	XUngrabServer(dpy);
+
 	if (dostruts) {
 		updatestruts(m);
 		updategeom(m);
 	}
+
 	if (doarrange) 
 		arrange(m);
+
 	updateatom[ClientList] (NULL);
 }
 
@@ -2269,8 +2282,7 @@ void updategeom(Monitor *m) {
 	updateatom[WorkArea] (NULL);
 }
 
-void
-updatestruts(Monitor *m) {
+void updatestruts(Monitor *m) {
 	Client *c;
 
 	m->struts[RightStrut] = m->struts[LeftStrut] = m->struts[TopStrut] =
@@ -2280,8 +2292,7 @@ updatestruts(Monitor *m) {
 			getstruts(c);
 }
 
-void
-unmapnotify(XEvent * e) {
+void unmapnotify(XEvent *e) {
 	Client *c;
 	XUnmapEvent *ev = &e->xunmap;
 
@@ -2293,8 +2304,7 @@ unmapnotify(XEvent * e) {
 	}
 }
 
-void
-updateframe(Client * c) {
+void updateframe(Client *c) {
 	int i, f = 0;
 
 	if (!c->title)
@@ -2304,23 +2314,26 @@ updateframe(Client * c) {
 		if (c->tags[i])
 			f += FEATURES(views[i].layout, OVERLAP);
 	}
+
 	//onodera
 	//c->th = !c->ismax && (c->isfloating || options.dectiled || f) ?
-//				style.titleheight : 0;
+	//			style.titleheight : 0;
+
 	if (!c->th)
 		XUnmapWindow(dpy, c->title);
 	else
 		XMapRaised(dpy, c->title);
 }
 
-void
-updatesizehints(Client * c) {
+void updatesizehints(Client *c) {
 	long msize;
 	XSizeHints size;
 
 	if (!XGetWMNormalHints(dpy, c->win, &size, &msize) || !size.flags)
 		size.flags = PSize;
+
 	c->flags = size.flags;
+
 	if (c->flags & PBaseSize) {
 		c->basew = size.base_width;
 		c->baseh = size.base_height;
@@ -2329,16 +2342,19 @@ updatesizehints(Client * c) {
 		c->baseh = size.min_height;
 	} else
 		c->basew = c->baseh = 0;
+
 	if (c->flags & PResizeInc) {
 		c->incw = size.width_inc;
 		c->inch = size.height_inc;
 	} else
 		c->incw = c->inch = 0;
+
 	if (c->flags & PMaxSize) {
 		c->maxw = size.max_width;
 		c->maxh = size.max_height;
 	} else
 		c->maxw = c->maxh = 0;
+
 	if (c->flags & PMinSize) {
 		c->minw = size.min_width;
 		c->minh = size.min_height;
@@ -2347,6 +2363,7 @@ updatesizehints(Client * c) {
 		c->minh = size.base_height;
 	} else
 		c->minw = c->minh = 0;
+
 	if (c->flags & PAspect) {
 		c->minax = size.min_aspect.x;
 		c->maxax = size.max_aspect.x;
@@ -2354,21 +2371,20 @@ updatesizehints(Client * c) {
 		c->maxay = size.max_aspect.y;
 	} else
 		c->minax = c->maxax = c->minay = c->maxay = 0;
+
 	c->isfixed = (c->maxw && c->minw && c->maxh && c->minh
 	    && c->maxw == c->minw && c->maxh == c->minh);
 }
 
-void
-updatetitle(Client * c) {
+void updatetitle(Client *c) {
 	if (!gettextprop(c->win, atom[WindowName], c->name, sizeof(c->name)))
-		gettextprop(c->win, atom[WMName], c->name, sizeof(c->name));
+	    gettextprop(c->win, atom[WMName], c->name, sizeof(c->name));
 }
 
 /* There's no way to check accesses to destroyed windows, thus those cases are
  * ignored (ebastardly on UnmapNotify's).  Other types of errors call Xlibs
  * default error handler, which may call exit. */
-int
-xerror(Display * dsply, XErrorEvent * ee) {
+int xerror(Display *dsply, XErrorEvent *ee) {
 	if (ee->error_code == BadWindow
 	    || (ee->request_code == X_SetInputFocus && ee->error_code == BadMatch)
 	    || (ee->request_code == X_PolyText8 && ee->error_code == BadDrawable)
@@ -2378,27 +2394,24 @@ xerror(Display * dsply, XErrorEvent * ee) {
 	    || (ee->request_code == X_GrabKey && ee->error_code == BadAccess)
 	    || (ee->request_code == X_CopyArea && ee->error_code == BadDrawable))
 		return 0;
+
 	fprintf(stderr,
-	    "pegasus: fatal error: request code=%d, error code=%d\n",
-	    ee->request_code, ee->error_code);
+	        "pegasus: fatal error: request code=%d, error code=%d\n",
+	        ee->request_code, ee->error_code);
+
 	return xerrorxlib(dsply, ee); /* May call exit */
 }
 
-int
-xerrordummy(Display * dsply, XErrorEvent * ee) {
+int xerrordummy(Display *dsply, XErrorEvent *ee) {
 	return 0;
 }
 
-/* Startup Error handler to check if another window manager
- * is already running. */
-int
-xerrorstart(Display * dsply, XErrorEvent * ee) {
+int xerrorstart(Display *dsply, XErrorEvent *ee) {
 	otherwm = True;
 	return -1;
 }
 
-void
-view(const char *arg) {
+void view(const char *arg) {
 	int i, j;
 	Monitor *m, *cm;
 	int prevtag;
@@ -2413,9 +2426,11 @@ view(const char *arg) {
 
 	for (j = 0; j < ntags; j++)
 		cm->seltags[j] = (arg == NULL);
+
 	cm->seltags[i] = True;
 	prevtag = cm->curtag;
 	cm->curtag = i;
+
 	for (m = mons; m; m = m->next) {
 		if (m->seltags[i] && m != cm) {
 			m->curtag = prevtag;
@@ -2425,35 +2440,37 @@ view(const char *arg) {
 			arrange(m);
 		}
 	}
+
 	updategeom(cm);
 	arrange(cm);
 	focus(NULL);
 	updateatom[CurDesk] (NULL);
 }
 
-void
-viewprevtag(const char *arg) {
+void viewprevtag(const char *arg) {
 	Bool tmptags[ntags];
 	unsigned int i = 0;
 	int prevcurtag;
 
 	while (i < ntags - 1 && !curprevtags[i])
 		i++;
+
 	prevcurtag = curmontag;
 	curmontag = i;
 
 	memcpy(tmptags, curseltags, ntags * sizeof(curseltags[0]));
 	memcpy(curseltags, curprevtags, ntags * sizeof(curseltags[0]));
 	memcpy(curprevtags, tmptags, ntags * sizeof(curseltags[0]));
+
 	if (views[prevcurtag].barpos != views[curmontag].barpos)
 		updategeom(curmon());
+
 	arrange(NULL);
 	focus(NULL);
 	updateatom[CurDesk] (NULL);
 }
 
-void
-viewlefttag(const char *arg) {
+void viewlefttag(const char *arg) {
 	unsigned int i;
 
 	for (i = 0; i < ntags; i++) {
@@ -2464,8 +2481,7 @@ viewlefttag(const char *arg) {
 	}
 }
 
-void
-viewrighttag(const char *arg) {
+void viewrighttag(const char *arg) {
 	unsigned int i;
 
 	for (i = 0; i < ntags - 1; i++) {
@@ -2476,23 +2492,23 @@ viewrighttag(const char *arg) {
 	}
 }
 
-void
-zoom(const char *arg) {
+void zoom(const char *arg) {
 	Client *c;
 
 	if (!sel || !FEATURES(curlayout, ZOOM) || sel->isfloating)
 		return;
+
 	if ((c = sel) == nexttiled(clients, curmon()))
 		if (!(c = nexttiled(c->next, curmon())))
 			return;
+
 	detach(c);
 	attach(c, 0);
 	arrange(curmon());
 	focus(c);
 }
 
-int
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	char conf[256] = "\0";
 
 	if (argc == 3 && !strcmp("-f", argv[1]))

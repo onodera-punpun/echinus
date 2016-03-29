@@ -34,7 +34,7 @@ Pegasus*hidebastards: 0
 
 ## KEYBINDS SETTINGS
 
-Pegasus*restart: W + p = echinus
+Pegasus*restart: W + p = pegasus
 Pegasus*killclient: W + q
 Pegasus*spawn0: W + Return = urxvtc
 Pegasus*spawn1: C + space = mpc -q toggle
@@ -55,7 +55,6 @@ Pegasus*incmwfact: W + Right = +0.05
 
 ## MISC SETTINGS
 
-Pegasus*opacity: 1
 Pegasus*attachaside: 1
 Pegasus*rootrightclick: mygtkmenu $HOME/.mygtkmenu
 Pegasus*rootscrolldown: xdesktop -p
@@ -77,7 +76,7 @@ Pegasus*rule1: mpv.* NULL 1 1
 Pegasus*decoratetiled: 1
 Pegasus*font: dina
 Pegasus*title: 30
-Pegasus*titlelayout: TCI--M
+Pegasus*titlelayout: CI--M
 Pegasus*normal.bg: #E5AB96
 Pegasus*normal.fg: #E5AB96
 Pegasus*selected.bg: #E5AB96
