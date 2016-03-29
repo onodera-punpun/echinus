@@ -77,7 +77,7 @@ struct Client {
 	int ignoreunmap;
 	long flags;
 	int border, oldborder;
-	Bool isbanned, ismax, isfloating, wasfloating, isfullscreen,
+	Bool isbanned, ismax, isfloating, wasfloating,
 	     isicon, isfill, isfixed, isbastard, isfocusable, hasstruts;
 	Bool *tags;
 	Client *next;
@@ -132,8 +132,6 @@ typedef struct {
 	char *prop;
 	char *tags;
 	Bool isfloating;
-	// TODO: Remove this?
-	Bool isfullscreen;
 	Bool hastitle;
 	regex_t *propregex;
 	regex_t *tagregex;
@@ -151,18 +149,18 @@ extern void (*updateatom[]) (void *);
 int getstruts(Client * c);
 
 /* Main */
-void arrange(Monitor * m);
-Monitor *clientmonitor(Client * c);
+void arrange(Monitor *m);
+Monitor *clientmonitor(Client *c);
 Monitor *curmon();
 void *emallocz(unsigned int size);
 void eprint(const char *errstr, ...);
 const char *getresource(const char *resource, const char *defval);
-Client *getclient(Window w, Client * list, int part);
+Client *getclient(Window w, Client *list, int part);
 Monitor *getmonitor(int x, int y);
 void iconify(const char *arg);
 void incnmaster(const char *arg);
-Bool isvisible(Client * c, Monitor * m);
-void focus(Client * c);
+Bool isvisible(Client *c, Monitor *m);
+void focus(Client *c);
 void focusicon(const char *arg);
 void focusnext(const char *arg);
 void focusprev(const char *arg);
@@ -171,7 +169,9 @@ void killclient(const char *arg);
 void moveresizekb(const char *arg);
 void quit(const char *arg);
 void restart(const char *arg);
+void setmax(Client *c);
 void setmwfact(const char *arg);
+void setunmax(Client *c);
 void setlayout(const char *arg);
 void spawn(const char *arg);
 void tag(const char *arg);
@@ -195,7 +195,7 @@ void initrules();
 int initkeys();
 
 /* draw.c */
-void drawclient(Client * c);
+void drawclient(Client *c);
 void deinitstyle();
 void initstyle();
 

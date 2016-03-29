@@ -99,6 +99,7 @@ void ewmh_update_net_client_list(void *p) {
 
 	for (c = stack; c; c = c->snext)
 		n++;
+
 	if (!n) {
 		XChangeProperty(dpy, root, atom[ClientList], XA_WINDOW, 32,
 		                PropModeReplace, (unsigned char *) wins, n);
@@ -106,16 +107,21 @@ void ewmh_update_net_client_list(void *p) {
 		                32, PropModeReplace, (unsigned char *) wins, n);
 		return;
 	}
+
 	wins = malloc(sizeof(Window) * n);
+
 	for (i = 0, c = stack; c; c = c->snext)
 		wins[i++] = c->win;
+
 	XChangeProperty(dpy, root,
 	                atom[ClientListStacking], XA_WINDOW, 32, PropModeReplace,
 	                (unsigned char *) wins, n);
 	for (i = 0, c = clients; c; c = c->next)
 		wins[i++] = c->win;
+
 	XChangeProperty(dpy, root,
 	                atom[ClientList], XA_WINDOW, 32, PropModeReplace, (unsigned char *) wins, n);
+
 	free(wins);
 	XFlush(dpy);
 }
@@ -136,11 +142,13 @@ void ewmh_update_net_current_desktop(void *p) {
 		for (i = 0; i < ntags; i++)
 			seltags[i] |= m->seltags[i];
 	}
+
 	XChangeProperty(dpy, root,
 	    atom[ESelTags], XA_CARDINAL, 32, PropModeReplace,
 	    (unsigned char *) seltags, ntags);
 	XChangeProperty(dpy, root, atom[CurDesk], XA_CARDINAL, 32,
 	    PropModeReplace, (unsigned char *) &curmontag, 1);
+
 	update_pegasus_layout_name(NULL);
 	free(seltags);
 }
@@ -164,18 +172,21 @@ void ewmh_update_net_work_area(void *p) {
 	y = m->way - m->sy;
 	w = m->waw;
 	h = m->wah;
+
 	for (m = m->next; m != NULL; m = m->next) {
 		x = max(x, m->wax - m->sx);
 		y = max(y, m->way - m->sy);
 		w = min(w, m->waw);
 		h = min(h, m->wah);
 	}
+
 	for (i = 0; i < ntags; i++) {
 		geoms[i*4] = x;
 		geoms[i*4+1] = y;
 		geoms[i*4+2] = w;
 		geoms[i*4+3] = h;
 	}
+
 	XChangeProperty(dpy, root,
 	    atom[WorkArea], XA_CARDINAL, 32, PropModeReplace, (unsigned char *) geoms, ntags*4);
 	free(geoms);
@@ -187,10 +198,12 @@ void ewmh_update_net_desktop_names(void *p) {
 	int len = 0;
 
 	pos = buf;
+
 	for (i = 0; i < ntags; i++) {
 		snprintf(pos, strlen(tags[i]) + 1, "%s", tags[i]);
 		pos += (strlen(tags[i]) + 1);
 	}
+
 	len = pos - buf;
 
 	XChangeProperty(dpy, root,
@@ -218,39 +231,43 @@ void mwm_process_atom(Client *c) {
 	#define MWM_DECOR_TITLE(x) ((x) & (1L << 3))
 	#define MWM_DECOR_BORDER(x) ((x) & (1L << 1))
 	#define MWM_HINTS_DECOR(x) ((x) & (1L << 1))
+
 	if (XGetWindowProperty(dpy, c->win, atom[MWMHints], 0L, 20L, False,
 		atom[MWMHints], &real, &format, &n, &extra,
 		(unsigned char **) &data) == Success && n >= MWM_HINTS_ELEMENTS) {
 		hint = (CARD32 *) data;
+	
 		if (MWM_HINTS_DECOR(hint[0]) && !(MWM_DECOR_ALL(hint[2]))) {
 			c->title = MWM_DECOR_TITLE(hint[2]) ? root : (Window) NULL;
 			c->border = MWM_DECOR_BORDER(hint[2]) ? style.border : 0;
 		}
 	}
+
 	XFree(data);
 }
 
 void ewmh_process_state_atom(Client *c, Atom state, int set) {
 	CARD32 data[2];
+	Monitor *m = curmon();
 
 	data[1] = None;
+
 	if (state == atom[WindowStateFs]) {
-		focus(c);
-		if ((set == _NET_WM_STATE_ADD || set == _NET_WM_STATE_TOGGLE)
-				&& !c->ismax) {
-			togglemax(NULL);
+		if (set == _NET_WM_STATE_ADD || set == _NET_WM_STATE_TOGGLE) {
+			setmax(c);
 			data[0] = state;
-		} else if ((set == _NET_WM_STATE_REMOVE ||
-				set == _NET_WM_STATE_TOGGLE) && c->ismax) {
-			togglemax(NULL);
+		} else if (set == _NET_WM_STATE_REMOVE || set == _NET_WM_STATE_TOGGLE) {
+			setunmax(c);
 			data[0] = None;
 		}
+
 		XChangeProperty(dpy, c->win, atom[WindowState], XA_ATOM, 32,
-		    PropModeReplace, (unsigned char *) data, 2);
+		                PropModeReplace, (unsigned char *) data, 2);
 		DPRINT;
 		arrange(curmon());
 		DPRINTF("%s: x%d y%d w%d h%d\n", c->name, c->x, c->y, c->w, c->h);
 	}
+
 	if (state == atom[WindowStateModal])
 		focus(c);
 }
@@ -262,8 +279,7 @@ void clientmessage(XEvent *e) {
 	if (ev->message_type == atom[CloseWindow]) {
 		if ((c = getclient(ev->window, clients, ClientWindow)))
 			killclient(c);
-	}
-	else if (ev->message_type == atom[ActiveWindow]) {
+	} else if (ev->message_type == atom[ActiveWindow]) {
 		if ((c = getclient(ev->window, clients, ClientWindow))) {
 				c->isicon = False;
 				focus(c);
@@ -327,6 +343,7 @@ Bool checkatom(Window win, Atom bigatom, Atom smallatom) {
 		if (state[i] == smallatom)
 			ret = True;
 	}
+
 	XFree(state);
 	return ret;
 }
@@ -341,11 +358,13 @@ int getstrut(Client *c, Atom strut) {
 		return ret;
 
 	state = (unsigned long*)getatom(c->win, strut, &n);
+
 	if (n) {
 		for (i = LeftStrut; i < LastStrut; i++)
 			m->struts[i] = max(state[i], m->struts[i]);
 		ret = 1;
 	}
+
 	XFree(state);
 	return ret;
 }
@@ -355,12 +374,12 @@ int getstruts(Client *c) {
 }
 
 void (*updateatom[]) (void *) = {
-	[ClientList] = ewmh_update_net_client_list,
 	[ActiveWindow] = ewmh_update_net_active_window,
-	[WindowDesk] = ewmh_update_net_window_desktop,
-	[NumberOfDesk] = ewmh_update_net_number_of_desktops,
-	[DeskNames] = ewmh_update_net_desktop_names,
+	[ClientList] = ewmh_update_net_client_list,
 	[CurDesk] = ewmh_update_net_current_desktop,
+	[DeskNames] = ewmh_update_net_desktop_names,
 	[ELayout] = update_pegasus_layout_name,
+	[NumberOfDesk] = ewmh_update_net_number_of_desktops,
+	[WindowDesk] = ewmh_update_net_window_desktop,
 	[WorkArea] = ewmh_update_net_work_area,
 };

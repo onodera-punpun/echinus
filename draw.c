@@ -107,12 +107,13 @@ void drawclient(Client *c) {
 
 	/* Left */
 	for (i = 0; i < strlen(style.titlelayout); i++) {
+		if (i == 0)
+			dc.x += 18;
+
 		if (style.titlelayout[i] == ' ' || style.titlelayout[i] == '-')
 			break;
 
 		dc.x += drawelement(style.titlelayout[i], dc.x, AlignLeft, c);
-		if (i == 0)
-			dc.x += 18;
 	}
 	if (i == strlen(style.titlelayout) || dc.x >= dc.w)
 		goto end;

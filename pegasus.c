@@ -1,24 +1,6 @@
-/* See LICENSE file for copyright and license details.
- *
- * pegasus window manager is designed like any other X client as well. It is
- * driven through handling X events. In contrast to other X clients, a window
- * manager selects for SubstructureRedirectMask on the root window, to receive
- * events about window (dis-)appearance.  Only one X connection at a time is
- * allowed to select for this event mask.
- *
- * The event handlers of pegasus are organized in an
- * array which is accessed whenever a new event has been fetched. This allows
- * event dispatching in O(1) time.
- *
- * Each child of the root window is called a client, except windows which have
- * set the override_redirect flag.  Clients are organized in a global
- * doubly-linked client list, the focus history is remembered through a global
- * stack list. Each client contains an array of Bools of the same size as the
- * global tags array to indicate the tags of a client.
- *
- * Keys and tagging rules are organized as arrays and defined in config.h.
- *
- * To understand everything else, start reading main().
+/*
+ *  echinus wm written by Alexander Polakov <polachok at gmail dot com>
+ *  pegasus wm forked by Camille Scholtz <onodera at openmailbox dot org>
  */
 
 #include <sys/types.h>
@@ -119,7 +101,9 @@ void save(Client *c);
 void scan(void);
 void setclientstate(Client *c, long state);
 void setlayout(const char *arg);
+void setmax(Client *c);
 void setmwfact(const char *arg);
+void setunmax(Client *c);
 void setup(char *);
 void spawn(const char *arg);
 void tag(const char *arg);
@@ -453,8 +437,8 @@ void buttonpress(XEvent *e) {
 				togglefloatingwin(NULL);
 			if (c->ismax)
 				togglemax(NULL);
-			mousemove(c);
 
+			mousemove(c);
 		} else if (ev->button == Button2) {
 			if (!FEATURES(curlayout, OVERLAP) && c->isfloating)
 				togglefloatingwin(NULL);
@@ -465,6 +449,7 @@ void buttonpress(XEvent *e) {
 				togglefloatingwin(NULL);
 			if (c->ismax)
 				togglemax(NULL);
+
 			mouseresize(c);
 		}
 	} else if ((c = getclient(ev->window, clients, ClientFrame))) {
@@ -1102,9 +1087,9 @@ void manage(Window w, XWindowAttributes *wa) {
 	wc.border_width = 0;
 	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc);
 	configure(c); /* Propagates border_width, if size doesn't change */
-	if (checkatom(c->win, atom[WindowState], atom[WindowStateFs]))
-		ewmh_process_state_atom(c, atom[WindowStateFs], 1);
+
 	ban(c);
+
 	updateatom[ClientList] (NULL);
 	updateatom[WindowDesk] (c);
 	updateframe(c);
@@ -1116,6 +1101,9 @@ void manage(Window w, XWindowAttributes *wa) {
 		updategeom(cm);
 
 	arrange(cm);
+
+	if (checkatom(c->win, atom[WindowState], atom[WindowStateFs]))
+		ewmh_process_state_atom(c, atom[WindowStateFs], 1);
 
 	if (!checkatom(c->win, atom[WindowType], atom[WindowTypeDesk]))
 		focus(NULL);
@@ -1652,6 +1640,19 @@ void setlayout(const char *arg) {
 	updateatom[ELayout] (NULL);
 }
 
+void setmax(Client *c) {
+	XEvent ev;
+	Monitor *m = curmon();
+
+	c->ismax = !c->ismax;
+	updateframe(c);
+
+	save(c);
+	resize(c, m->sx - c->border, m->sy - c->border - c->th, m->sw, m->sh + c->th, False);
+
+	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
+}
+
 void setmwfact(const char *arg) {
 	double delta;
 
@@ -1674,6 +1675,17 @@ void setmwfact(const char *arg) {
 	}
 
 	arrange(curmon());
+}
+
+void setunmax(Client *c) {
+	XEvent ev;
+
+	c->ismax = !c->ismax;
+	updateframe(c);
+
+	resize(c, c->rx, c->ry, c->rw, c->rh, True);
+
+	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
 }
 
 void initlayouts() {
@@ -2080,20 +2092,11 @@ void togglefill(const char *arg) {
 }
 
 void togglemax(const char *arg) {
-	XEvent ev;
-	Monitor *m = curmon();
-
-	if (!sel)
-		return;
-
-	sel->ismax = !sel->ismax;
-	updateframe(sel);
-
 	if (sel->ismax) {
-		save(sel);
-		resize(sel, m->sx - sel->border, m->sy - sel->border - sel->th, m->sw, m->sh + sel->th, False);
-	} else
-		resize(sel, sel->rx, sel->ry, sel->rw, sel->rh, True);
+		setmax(sel);
+	} else {
+		setunmax(sel);
+	}
 }
 
 void toggletag(const char *arg) {
@@ -2238,6 +2241,7 @@ void unmanage(Client *c) {
 
 	if (sel == c)
 		focus(NULL);
+
 	setclientstate(c, WithdrawnState);
 	XDestroyWindow(dpy, c->frame);
 
