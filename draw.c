@@ -108,7 +108,7 @@ void drawclient(Client *c) {
 	/* Left */
 	for (i = 0; i < strlen(style.titlelayout); i++) {
 		if (i == 0)
-			dc.x += 18;
+			dc.x += 21;
 
 		if (style.titlelayout[i] == ' ' || style.titlelayout[i] == '-')
 			break;

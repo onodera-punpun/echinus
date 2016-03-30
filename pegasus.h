@@ -52,7 +52,7 @@ struct Monitor {
 };
 
 typedef struct {
-	void (*arrange) (Monitor * m);
+	void (*arrange) (Monitor *m);
 	char symbol;
 	int features;
 	#define BIT(_i) (1 << (_i))
@@ -156,7 +156,7 @@ void *emallocz(unsigned int size);
 void eprint(const char *errstr, ...);
 const char *getresource(const char *resource, const char *defval);
 Client *getclient(Window w, Client *list, int part);
-Monitor *getmonitor(int x, int y);
+Monitor *getmon(int x, int y);
 void iconify(const char *arg);
 void incnmaster(const char *arg);
 Bool isvisible(Client *c, Monitor *m);
@@ -180,7 +180,7 @@ void togglefloatingwin(const char *arg);
 void togglefloatingtag(const char *arg);
 void togglefill(const char *arg);
 void togglemax(const char *arg);
-void togglemonitor(const char *arg);
+void togglemon(const char *arg);
 void toggletag(const char *arg);
 void toggleview(const char *arg);
 void updateframe(Client *c);

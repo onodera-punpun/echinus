@@ -72,7 +72,7 @@ Bool gettextprop(Window w, Atom atom, char *text, unsigned int size);
 void getpointer(int *x, int *y);
 Monitor *getmon(int x, int y);
 Monitor *curmon();
-Monitor *clientmonitor(Client *c);
+Monitor *clientmon(Client *c);
 int idxoftag(const char *tag);
 Bool isvisible(Client *c, Monitor *m);
 void initmons(XEvent *e);
@@ -117,7 +117,7 @@ void togglemax(const char *arg);
 void togglefill(const char *arg);
 void toggletag(const char *arg);
 void toggleview(const char *arg);
-void togglemonitor(const char *arg);
+void togglemon(const char *arg);
 void focusview(const char *arg);
 void unban(Client *c);
 void unmanage(Client *c);
@@ -293,14 +293,14 @@ void arrangemon(Monitor *m) {
 	restack(m);
 
 	for (c = stack; c; c = c->snext) {
-		if ((clientmonitor(c) == m) && ((!c->isbastard && !c->isicon) ||
+		if ((clientmon(c) == m) && ((!c->isbastard && !c->isicon) ||
 			(c->isbastard && views[m->curtag].barpos == StrutsOn))) {
 			unban(c);
 		}
 	}
 
 	for (c = stack; c; c = c->snext) {
-		if ((clientmonitor(c) == NULL) || (!c->isbastard && c->isicon) ||
+		if ((clientmon(c) == NULL) || (!c->isbastard && c->isicon) ||
 			(c->isbastard && views[m->curtag].barpos == StrutsHide)) {
 			ban(c);
 		}
@@ -541,12 +541,12 @@ void configurerequest(XEvent *e) {
 	int x, y, w, h;
 
 	if ((c = getclient(ev->window, clients, ClientWindow))) {
-		cm = clientmonitor(c);
+		cm = clientmon(c);
 
 		if (ev->value_mask & CWBorderWidth)
 			c->border = ev->border_width;
 
-		if (c->isfixed || c->isfloating || MFEATURES(clientmonitor(c), OVERLAP)) {
+		if (c->isfixed || c->isfloating || MFEATURES(clientmon(c), OVERLAP)) {
 			if (ev->value_mask & CWX)
 				x = ev->x;
 			if (ev->value_mask & CWY)
@@ -1028,7 +1028,7 @@ void manage(Window w, XWindowAttributes *wa) {
 	if (!wa->x && !wa->y && !c->isbastard)
 		place(c);
 
-	cm = c->isbastard ? getmon(wa->x, wa->y) : clientmonitor(c);
+	cm = c->isbastard ? getmon(wa->x, wa->y) : clientmon(c);
 	if (!cm) {
 		DPRINTF("Cannot find monitor for window 0x%x,"
 				"requested coordinates %d,%d\n", w, wa->x, wa->y);
@@ -1186,7 +1186,7 @@ Monitor *getmon(int x, int y) {
 	return NULL;
 }
 
-Monitor * clientmonitor(Client *c) {
+Monitor * clientmon(Client *c) {
 	Monitor *m;
 
 	assert(c != NULL);
@@ -1374,8 +1374,8 @@ void propertynotify(XEvent *e) {
 	if ((c = getclient(ev->window, clients, ClientWindow))) {
 		if (ev->atom == atom[StrutPartial]) {
 			c->hasstruts = getstruts(c);
-			updategeom(clientmonitor(c));
-			arrange(clientmonitor(c));
+			updategeom(clientmon(c));
+			arrange(clientmon(c));
 		}
 		if (ev->state == PropertyDelete) 
 			return;
@@ -1389,7 +1389,7 @@ void propertynotify(XEvent *e) {
 				XGetTransientForHint(dpy, c->win, &trans);
 				if (!c->isfloating && (c->isfloating =
 				   (getclient(trans, clients, ClientWindow) != NULL)))
-					arrange(clientmonitor(c));
+					arrange(clientmon(c));
 				break;
 			case XA_WM_NORMAL_HINTS:
 				updatesizehints(c);
@@ -2116,7 +2116,7 @@ void toggletag(const char *arg) {
 	arrange(NULL);
 }
 
-void togglemonitor(const char *arg) {
+void togglemon(const char *arg) {
 	Monitor *m, *cm;
 	int x, y;
 
@@ -2210,7 +2210,7 @@ void unmanage(Client *c) {
 	Bool doarrange, dostruts;
 	Window trans;
 
-	m = clientmonitor(c);
+	m = clientmon(c);
 	doarrange = !(c->isfloating || c->isfixed
 	             || XGetTransientForHint(dpy, c->win, &trans)) || c->isbastard;
 	dostruts = c->hasstruts;

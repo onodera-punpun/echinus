@@ -354,7 +354,7 @@ int getstrut(Client *c, Atom strut) {
 	Monitor *m;
 	unsigned long i, n;
 
-	if (!(m = clientmonitor(c)))
+	if (!(m = clientmon(c)))
 		return ret;
 
 	state = (unsigned long*)getatom(c->win, strut, &n);
