@@ -1,7 +1,10 @@
 /* enums */
 
 /* Keep in sync with atomnames[][] in ewmh.c */
-enum { ClientList, ActiveWindow, WindowDesk,
+enum {
+	ClientList,
+	ActiveWindow,
+	WindowDesk,
 	NumberOfDesk,
 	DeskNames,
 	CurDesk,
@@ -77,8 +80,7 @@ struct Client {
 	int ignoreunmap;
 	long flags;
 	int border, oldborder;
-	Bool isbanned, ismax, isfloating, wasfloating,
-	     isicon, isfill, isfixed, isbastard, isfocusable, hasstruts;
+	Bool isbanned, ismax, isfloating, wasfloating, isfill, isfixed, isbastard, isfocusable, hasstruts;
 	Bool *tags;
 	Client *next;
 	Client *prev;
@@ -150,7 +152,7 @@ int getstruts(Client * c);
 
 /* Main */
 void arrange(Monitor *m);
-Monitor *clientmonitor(Client *c);
+Monitor *clientmon(Client *c);
 Monitor *curmon();
 void *emallocz(unsigned int size);
 void eprint(const char *errstr, ...);
@@ -161,7 +163,6 @@ void iconify(const char *arg);
 void incnmaster(const char *arg);
 Bool isvisible(Client *c, Monitor *m);
 void focus(Client *c);
-void focusicon(const char *arg);
 void focusnext(const char *arg);
 void focusprev(const char *arg);
 void focusview(const char *arg);

@@ -264,8 +264,8 @@ void arrangefloats(Monitor *m) {
 
 	for (c = stack; c; c = c->snext) {
 		if (isvisible(c, m) && !c->isbastard
-		&& (c->isfloating || MFEATURES(m, OVERLAP))
-		&& !c->ismax && !c->isicon) {
+		    && (c->isfloating || MFEATURES(m, OVERLAP))
+		    && !c->ismax) {
 			DPRINTF("%d %d\n", c->rx, c->ry);
 			if (!(om = getmon(c->rx + c->rw/2,
 			c->ry + c->rh/2)))
@@ -287,24 +287,21 @@ void arrangemon(Monitor *m) {
 	Client *c;
 
 	if (views[m->curtag].layout->arrange)
-		views[m->curtag].layout->arrange(m);
+	    views[m->curtag].layout->arrange(m);
 
 	arrangefloats(m);
 	restack(m);
 
 	for (c = stack; c; c = c->snext) {
-		if ((clientmon(c) == m) && ((!c->isbastard && !c->isicon) ||
-			(c->isbastard && views[m->curtag].barpos == StrutsOn))) {
+		if ((clientmon(c) == m) && (!c->isbastard
+		    || (c->isbastard && views[m->curtag].barpos == StrutsOn))) {
 			unban(c);
-		}
-	}
-
-	for (c = stack; c; c = c->snext) {
-		if ((clientmon(c) == NULL) || (!c->isbastard && c->isicon) ||
-			(c->isbastard && views[m->curtag].barpos == StrutsHide)) {
+		} else if ((clientmon(c) == NULL) ||
+		           (c->isbastard && views[m->curtag].barpos == StrutsHide)) {
 			ban(c);
 		}
 	}
+
 }
 
 void arrange(Monitor *m) {
@@ -478,6 +475,7 @@ void cleanup(void) {
 		unban(stack);
 		unmanage(stack);
 	}
+
 	free(tags);
 	free(keys);
 	initmons(NULL);
@@ -723,7 +721,7 @@ void focus(Client *c) {
 
 	if ((!c && selscreen) || (c && (c->isbastard || !isvisible(c, curmon()))))
 		for (c = stack;
-		    c && (c->isbastard || c->isicon || !isvisible(c, curmon())); c = c->snext);
+			c && (c->isbastard || !isvisible(c, curmon())); c = c->snext);
 	if (sel && sel != c)
 		XSetWindowBorder(dpy, sel->frame, style.color.norm[ColBorder]);
 
@@ -757,20 +755,6 @@ void focus(Client *c) {
 	updateatom[CurDesk] (NULL);
 }
 
-void focusicon(const char *arg) {
-	Client *c;
-
-	for (c = clients; c && (!c->isicon || !isvisible(c, curmon())); c = c->next);
-
-	if (!c)
-		return;
-
-	c->isicon = False;
-	focus(c);
-	arrange(curmon());
-}
-
-// TODO: Make this titlefy
 void iconify(const char *arg) {
 	Client *c;
 
@@ -778,10 +762,9 @@ void iconify(const char *arg) {
 		return;
 
 	c = sel;
-	focus(NULL);
-	ban(c);
-	c->isicon = True;
-	arrange(curmon());
+
+	// TODO: Use th here
+	resize(c, c->x, c->y, c->w, c->th + 1, False);
 }
 
 void incnmaster(const char *arg) {
@@ -988,7 +971,6 @@ void manage(Window w, XWindowAttributes *wa) {
 	}
 
 	cm = curmon();
-	c->isicon = False;
 	c->title = c->isbastard ? (Window) NULL : 1;
 	c->tags = emallocz(ntags * sizeof(cm->seltags[0]));
 	c->isfocusable = c->isbastard ? False : True;
@@ -1318,15 +1300,13 @@ void mouseresize(Client *c) {
 }
 
 Client *nexttiled(Client *c, Monitor *m) {
-	for (; c && (c->isfloating || !isvisible(c, m) || c->isbastard
-	     || c->isicon); c = c->next);
-	return c;
+	for (; c && (c->isfloating || !isvisible(c, m) || c->isbastard); c = c->next);
+		return c;
 }
 
 Client * prevtiled(Client *c, Monitor *m) {
-	for (; c && (c->isfloating || !isvisible(c, m) || c->isbastard
-	     || c->isicon); c = c->prev);
-	return c;
+	for (; c && (c->isfloating || !isvisible(c, m) || c->isbastard); c = c->prev);
+		return c;
 }
 
 void reparentnotify(XEvent *e) {
@@ -1493,7 +1473,7 @@ void restack(Monitor *m) {
 		return;
 
 	for (n = 0, c = stack; c; c = c->snext) {
-		if (isvisible(c, m) && !c->isicon) {
+		if (isvisible(c, m)) {
 			n++;
 		}
 	}
@@ -1505,21 +1485,22 @@ void restack(Monitor *m) {
 	i = 0;
 
 	for (c = stack; c && i < n; c = c->snext)
-		if (isvisible(c, m) && !c->isicon)
+		if (isvisible(c, m))
 			if (!c->isbastard && c->isfloating)
 				wl[i++] = c->frame;
 	for (c = stack; c && i < n; c = c->snext)
-		if (isvisible(c, m) && !c->isicon && c->isbastard &&
+		if (isvisible(c, m) && c->isbastard &&
 		    !checkatom(c->win, atom[WindowType], atom[WindowTypeDesk]))
 			wl[i++] = c->frame;
 	for (c = stack; c && i < n; c = c->snext) 
-		if (isvisible(c, m) && !c->isicon)
+		if (isvisible(c, m))
 			if (!c->isfloating && !c->isbastard)
 				wl[i++] = c->frame;
 	for (c = stack; c && i < n; c = c->snext)
-		if (isvisible(c, m) && !c->isicon && c->isbastard && 
+		if (isvisible(c, m) && c->isbastard && 
 			checkatom(c->win, atom[WindowType], atom[WindowTypeDesk]))
 				wl[i++] = c->frame;
+
 	assert(i == n);
 	XRestackWindows(dpy, wl, n);
 	free(wl);
@@ -1583,8 +1564,8 @@ void scan(void) {
 				continue;
 			if (XGetTransientForHint(dpy, wins[i], &d1)
 			    && (wa.map_state == IsViewable
-				|| getstate(wins[i]) == IconicState
-				|| getstate(wins[i]) == NormalState))
+			    || getstate(wins[i]) == IconicState
+			    || getstate(wins[i]) == NormalState))
 				manage(wins[i], &wa);
 		}
 	}
@@ -1600,7 +1581,6 @@ void setclientstate(Client *c, long state) {
 	XChangeProperty(dpy, c->win, atom[WMState], atom[WMState], 32,
 	    PropModeReplace, (unsigned char *) data, 2);
 	if (state == NormalState) {
-		c->isicon = False;
 		XDeleteProperty(dpy, c->win, atom[WindowState]);
 	} else {
 		winstate[0] = atom[WindowStateHidden];

@@ -281,7 +281,6 @@ void clientmessage(XEvent *e) {
 			killclient(c);
 	} else if (ev->message_type == atom[ActiveWindow]) {
 		if ((c = getclient(ev->window, clients, ClientWindow))) {
-				c->isicon = False;
 				focus(c);
 				arrange(curmon());
 		}
